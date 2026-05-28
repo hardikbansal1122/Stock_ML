@@ -102,3 +102,8 @@ coverage/
 # =========================
 *.swp
 *.swo
+#==========================================
+# Runtime/generated dashboard files
+stock_dashboard/last_scan.json
+stock_dashboard/paper_trading_log.xlsx
+#==========================================
