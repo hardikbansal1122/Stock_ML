@@ -1,0 +1,104 @@
+# =========================
+# Python virtual environments
+# =========================
+.venv/
+venv/
+ENV/
+env/
+
+# =========================
+# Python cache
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Build / packaging
+# =========================
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# =========================
+# Environment variables
+# =========================
+.env
+frontend/.env
+backend/.env
+
+# =========================
+# IDE/editor settings
+# =========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Jupyter Notebook checkpoints
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Python tooling cache
+# =========================
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# ML models & artifacts
+# =========================
+models/
+artifacts/
+checkpoints/
+
+*.pkl
+*.joblib
+
+# =========================
+# Generated datasets/results
+# =========================
+data/
+exports/
+
+backtest_trades.csv
+portfolio_history.csv
+signals_*.csv
+test_predictions.csv
+features.csv
+feature_list.csv
+
+# =========================
+# Frontend
+# =========================
+node_modules/
+.next/
+out/
+coverage/
+
+# =========================
+# Database files
+# =========================
+*.db
+*.sqlite3
+
+# =========================
+# Temporary files
+# =========================
+*.swp
+*.swo

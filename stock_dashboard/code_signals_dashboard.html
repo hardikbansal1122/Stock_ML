@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#868382",
+                      "secondary": "#3d683d",
+                      "tertiary-fixed": "#e6e2df",
+                      "on-error": "#ffffff",
+                      "secondary-fixed-dim": "#a2d39e",
+                      "inverse-primary": "#c8c6c5",
+                      "on-surface-variant": "#444748",
+                      "on-surface": "#1c1b1b",
+                      "on-primary-fixed-variant": "#474746",
+                      "background": "#fdf8f8",
+                      "on-primary-fixed": "#1c1b1b",
+                      "error": "#ba1a1a",
+                      "inverse-surface": "#313030",
+                      "outline": "#747878",
+                      "on-tertiary-fixed": "#1c1b1a",
+                      "tertiary-fixed-dim": "#cac6c4",
+                      "on-secondary-fixed": "#002105",
+                      "tertiary-container": "#1c1b1a",
+                      "surface-container-high": "#ebe7e6",
+                      "on-secondary": "#ffffff",
+                      "surface-bright": "#fdf8f8",
+                      "on-secondary-fixed-variant": "#255027",
+                      "surface-container-low": "#f7f3f2",
+                      "on-secondary-container": "#416d41",
+                      "surface-container": "#f1edec",
+                      "tertiary": "#000000",
+                      "surface-variant": "#e5e2e1",
+                      "primary-fixed-dim": "#c8c6c5",
+                      "error-container": "#ffdad6",
+                      "inverse-on-surface": "#f4f0ef",
+                      "primary-container": "#1c1b1b",
+                      "on-primary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-container": "#858383",
+                      "primary": "#000000",
+                      "surface": "#fdf8f8",
+                      "surface-container-highest": "#e5e2e1",
+                      "secondary-fixed": "#beefb8",
+                      "surface-tint": "#5f5e5e",
+                      "primary-fixed": "#e5e2e1",
+                      "outline-variant": "#c4c7c7",
+                      "surface-dim": "#ddd9d8",
+                      "on-error-container": "#93000a",
+                      "on-background": "#1c1b1b",
+                      "on-tertiary-fixed-variant": "#484645",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#bbecb5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding": "24px",
+                      "margin-page": "40px",
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "unit": "4px",
+                      "stack-lg": "32px",
+                      "stack-sm": "8px"
+              },
+              "fontFamily": {
+                      "data-md": ["JetBrains Mono"],
+                      "label-caps": ["Plus Jakarta Sans"],
+                      "data-lg": ["JetBrains Mono"],
+                      "headline-sm": ["Playfair Display"],
+                      "headline-md": ["Playfair Display"],
+                      "body-lg": ["Plus Jakarta Sans"],
+                      "display-lg": ["Playfair Display"],
+                      "body-md": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "data-md": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                      "data-lg": ["20px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-container-padding h-16 sticky top-0 z-50 bg-surface dark:bg-surface-container-high border-b border-black/10 dark:border-white/10 flat no shadows">
+<div class="flex items-center gap-8">
+<span class="text-headline-md font-headline-md italic text-primary dark:text-primary-fixed">Quant.ML</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-label-caps font-label-caps text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-3 py-2" href="#">Markets</a>
+<a class="text-label-caps font-label-caps text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-3 py-2" href="#">Screener</a>
+<a class="text-label-caps font-label-caps text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-3 py-2" href="#">Research</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-surface-container-low px-3 py-1 border border-black/5">
+<span class="material-symbols-outlined text-[20px] mr-2">wb_sunny</span>
+<span class="text-label-caps font-label-caps">LIGHT</span>
+<span class="mx-2 text-outline-variant">/</span>
+<span class="text-label-caps font-label-caps text-on-surface-variant opacity-40">DARK</span>
+<span class="material-symbols-outlined text-[20px] ml-2 opacity-40">dark_mode</span>
+</div>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors">notifications</button>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors">settings</button>
+<button class="bg-primary text-on-primary text-label-caps font-label-caps px-6 py-2 transition-all active:opacity-80">Execute Trade</button>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-64px)]">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-[calc(100vh-64px)] sticky left-0 top-16 py-stack-lg bg-surface-container-low dark:bg-surface-container border-r border-black/5 dark:border-white/5 w-64 shrink-0">
+<div class="px-6 mb-10">
+<div class="text-headline-sm font-headline-sm italic text-primary dark:text-primary-fixed">NSE TERMINAL</div>
+<div class="text-data-md font-data-md text-on-surface-variant mt-1 uppercase">Engine v4.2 Active</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-primary dark:text-primary-fixed bg-surface dark:bg-surface-bright font-bold translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="dashboard">dashboard</span>
+<span class="text-label-caps font-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="sensors">sensors</span>
+<span class="text-label-caps font-label-caps">Live Signals</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="history">history</span>
+<span class="text-label-caps font-label-caps">Trade History</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="text-label-caps font-label-caps">Portfolio</span>
+</a>
+</nav>
+<div class="px-6 mt-auto pt-6 space-y-4">
+<button class="w-full bg-secondary text-on-secondary py-3 text-label-caps font-label-caps transition-all active:translate-x-1">New Analysis</button>
+<div class="space-y-1">
+<a class="flex items-center text-on-surface-variant text-label-caps font-label-caps py-2 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" data-icon="description">description</span> Docs
+                    </a>
+<a class="flex items-center text-on-surface-variant text-label-caps font-label-caps py-2 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" data-icon="help">help</span> Support
+                    </a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-gutter grid grid-cols-12 gap-gutter bg-surface">
+<!-- Left: Main Signals -->
+<section class="col-span-12 lg:col-span-8 space-y-stack-lg">
+<div class="flex items-baseline justify-between border-b border-black/10 pb-4">
+<h1 class="font-headline-md text-headline-md text-primary italic">Today's Alpha Picks</h1>
+<span class="font-data-md text-data-md text-on-surface-variant uppercase">Updated 14:32:01 IST</span>
+</div>
+<div class="space-y-gutter">
+<!-- Signal Item 1 -->
+<div class="bg-surface-container-lowest border border-black/5 p-6 transition-all hover:bg-surface-container-low group">
+<div class="flex items-start justify-between mb-6">
+<div>
+<span class="font-data-lg text-data-lg text-primary tracking-tighter">RELIANCE.NS</span>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Reliance Industries Ltd.</p>
+</div>
+<div class="text-right">
+<span class="font-data-lg text-data-lg text-secondary">₹2,842.15</span>
+<p class="font-data-md text-data-md text-secondary mt-1">+1.42%</p>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-8">
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">Confidence</label>
+<div class="h-1 bg-surface-container-highest w-full relative">
+<div class="absolute top-0 left-0 h-full bg-secondary w-[88%]"></div>
+</div>
+<span class="font-data-md text-data-md text-primary mt-2 block">88% <span class="text-on-tertiary-container ml-1">High Conviction</span></span>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">RSI Badge</label>
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container text-secondary px-3 py-1 font-data-md text-data-md">64.2</span>
+<span class="font-label-caps text-label-caps text-secondary">Bullish Range</span>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">Volume Index</label>
+<div class="flex items-baseline gap-1">
+<span class="font-data-md text-data-md text-primary">1.8x</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Signal Item 2 -->
+<div class="bg-surface-container-lowest border border-black/5 p-6 transition-all hover:bg-surface-container-low group">
+<div class="flex items-start justify-between mb-6">
+<div>
+<span class="font-data-lg text-data-lg text-primary tracking-tighter">TCS.NS</span>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Tata Consultancy Services</p>
+</div>
+<div class="text-right">
+<span class="font-data-lg text-data-lg text-primary">₹3,914.80</span>
+<p class="font-data-md text-data-md text-on-surface-variant mt-1">0.00%</p>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-8">
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">Confidence</label>
+<div class="h-1 bg-surface-container-highest w-full relative">
+<div class="absolute top-0 left-0 h-full bg-on-tertiary-container w-[42%]"></div>
+</div>
+<span class="font-data-md text-data-md text-primary mt-2 block">42% <span class="text-on-tertiary-container ml-1">Neutral</span></span>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">RSI Badge</label>
+<div class="flex items-center gap-2">
+<span class="bg-surface-variant text-on-surface-variant px-3 py-1 font-data-md text-data-md">51.8</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Wait Zone</span>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">Volume Index</label>
+<div class="flex items-baseline gap-1">
+<span class="font-data-md text-data-md text-primary">0.9x</span>
+<span class="material-symbols-outlined text-outline-variant text-[16px]">horizontal_rule</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Signal Item 3 -->
+<div class="bg-surface-container-lowest border border-black/5 p-6 transition-all hover:bg-surface-container-low group">
+<div class="flex items-start justify-between mb-6">
+<div>
+<span class="font-data-lg text-data-lg text-primary tracking-tighter">HDFCBANK.NS</span>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">HDFC Bank Limited</p>
+</div>
+<div class="text-right">
+<span class="font-data-lg text-data-lg text-error">₹1,432.90</span>
+<p class="font-data-md text-data-md text-error mt-1">-0.85%</p>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-8">
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">Confidence</label>
+<div class="h-1 bg-surface-container-highest w-full relative">
+<div class="absolute top-0 left-0 h-full bg-error w-[76%]"></div>
+</div>
+<span class="font-data-md text-data-md text-primary mt-2 block">76% <span class="text-on-tertiary-container ml-1">Bearish Conviction</span></span>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">RSI Badge</label>
+<div class="flex items-center gap-2">
+<span class="bg-error-container text-error px-3 py-1 font-data-md text-data-md">32.4</span>
+<span class="font-label-caps text-label-caps text-error">Oversold</span>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-tertiary-container block mb-2 uppercase">Volume Index</label>
+<div class="flex items-baseline gap-1">
+<span class="font-data-md text-data-md text-primary">2.4x</span>
+<span class="material-symbols-outlined text-error text-[16px]" style="font-variation-settings: 'FILL' 1;">trending_down</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right: Terminal & Sentiment -->
+<section class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Terminal Log -->
+<div class="bg-primary text-on-primary-fixed border border-black p-gutter flex flex-col h-[500px]">
+<div class="flex items-center justify-between border-b border-white/20 pb-4 mb-4">
+<h2 class="font-headline-sm text-headline-sm text-surface-bright">Terminal Overview</h2>
+<span class="material-symbols-outlined text-surface-bright/50">data_object</span>
+</div>
+<div class="flex-1 font-data-md text-data-md overflow-y-auto custom-scrollbar space-y-3">
+<div class="flex gap-4">
+<span class="text-on-tertiary-container shrink-0">14:31:02</span>
+<span class="text-secondary-fixed-dim">[SCAN]</span>
+<span>Volatility breakout detected in RELIANCE.NS</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-tertiary-container shrink-0">14:30:58</span>
+<span class="text-primary-fixed">[INFO]</span>
+<span>MACD Crossover confirmed for NIFTY_50_L_CAP</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-tertiary-container shrink-0">14:30:45</span>
+<span class="text-error-container">[WARN]</span>
+<span>Liquidity depth decreasing on HDFCBANK 1400P</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-tertiary-container shrink-0">14:29:12</span>
+<span class="text-primary-fixed">[EXEC]</span>
+<span>Portfolio hedge strategy 'DELTA_NEUTRAL_1' active</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-tertiary-container shrink-0">14:28:40</span>
+<span class="text-secondary-fixed-dim">[SCAN]</span>
+<span>Volume spike detected in ITC.NS (3.2x avg)</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-tertiary-container shrink-0">14:27:00</span>
+<span class="text-primary-fixed">[INFO]</span>
+<span>Global Markets sync complete. US Futures: +0.2%</span>
+</div>
+<div class="flex gap-4 opacity-40">
+<span class="text-on-tertiary-container shrink-0">14:25:55</span>
+<span class="text-primary-fixed">[SYST]</span>
+<span>Heartbeat verified. Latency: 4ms</span>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-[10px] uppercase font-bold tracking-widest text-on-tertiary-container">
+<span>Status: Operational</span>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+<span>Direct Feed: NSE_DASH</span>
+</div>
+</div>
+</div>
+<!-- Market Sentiment -->
+<div class="bg-surface-container-low border border-black/5 p-gutter">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-6 uppercase tracking-[0.15em]">Market Sentiment Index</h3>
+<div class="relative pt-12 pb-8">
+<!-- Sentiment Arc/Meter Visualization -->
+<div class="flex items-center justify-between mb-4">
+<span class="font-data-md text-data-md text-error">FEAR</span>
+<span class="font-data-md text-data-md text-secondary">GREED</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest relative mb-4">
+<div class="absolute top-1/2 left-[72%] -translate-y-1/2 w-4 h-4 bg-primary border-2 border-surface rotate-45"></div>
+</div>
+<div class="text-center mt-6">
+<span class="font-display-lg text-[42px] leading-none block text-primary">72</span>
+<span class="font-label-caps text-label-caps text-secondary uppercase mt-2 block">Optimistic Momentum</span>
+</div>
+</div>
+<div class="mt-8 grid grid-cols-2 gap-4 border-t border-black/5 pt-6">
+<div>
+<span class="font-label-caps text-[10px] text-on-tertiary-container block mb-1">ADVANCES</span>
+<span class="font-data-lg text-data-lg text-secondary">34</span>
+</div>
+<div class="text-right">
+<span class="font-label-caps text-[10px] text-on-tertiary-container block mb-1">DECLINES</span>
+<span class="font-data-lg text-data-lg text-error">16</span>
+</div>
+</div>
+</div>
+<!-- Small Visual Anchor -->
+<div class="h-32 bg-surface-container border border-black/5 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, black 1px, transparent 0); background-size: 16px 16px;"></div>
+<div class="z-10 text-center">
+<span class="font-headline-sm text-headline-sm italic text-primary opacity-20">Quant.Analysis</span>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Mobile Navigation Shell (Suppressed on large screens) -->
+<div class="fixed bottom-0 left-0 right-0 bg-surface border-t border-black/10 flex md:hidden h-16 z-50 px-container-padding justify-between items-center">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-[10px] font-label-caps uppercase">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span class="text-[10px] font-label-caps uppercase">Signals</span>
+</button>
+<div class="bg-primary text-on-primary w-12 h-12 flex items-center justify-center -translate-y-4 shadow-xl">
+<span class="material-symbols-outlined">add</span>
+</div>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="text-[10px] font-label-caps uppercase">Wallet</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] font-label-caps uppercase">Menu</span>
+</button>
+</div>
+</body></html>
