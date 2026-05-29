@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quant.ML — Stock Signal Engine</title>
+<title>Signal Desk — Research Terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@8..60,400;8..60,600;8..60,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <style>
-/* ── Design Tokens ─────────────────────────────────────────────────────── */
+/* ── Design Tokens (Phase 1) ───────────────────────────────────────────── */
 :root {
-  --bg:          #fdf8f8;
+  --bg:          #faf9f6;
   --surface:     #ffffff;
   --surface-low: #f7f3f2;
   --surface-mid: #f1edec;
@@ -19,24 +19,26 @@
   --border:      rgba(0,0,0,0.06);
   --border-md:   rgba(0,0,0,0.10);
   --border-dark: rgba(0,0,0,0.16);
-  --txt:         #1c1b1b;
-  --txt2:        #444748;
+  --txt:         #1a1a1a;
+  --txt2:        #5c5a57;
   --txt3:        #868382;
-  --primary:     #000000;
+  --primary:     #1a1a1a;
   --on-primary:  #ffffff;
   --green:       #3d683d;
-  --green-bg:    #bbecb5;
+  --green-bg:    #e8f0e6;
   --green-tint:  rgba(61,104,61,0.08);
-  --red:         #ba1a1a;
-  --red-bg:      #ffdad6;
-  --red-tint:    rgba(186,26,26,0.08);
-  --amber:       #b45309;
-  --amber-bg:    #fef3c7;
+  --red:         #8b2942;
+  --red-bg:      #f5e8eb;
+  --red-tint:    rgba(139,41,66,0.08);
+  --notice:      #5c5a57;
+  --notice-bg:   #f1edec;
+  --notice-border: rgba(0,0,0,0.12);
   --outline:     #747878;
   --outline-var: #c4c7c7;
+  --topnav-h:    64px;
+  --sidebar-w:   248px;
 }
 
-/* ── Dark Mode Overrides ────────────────────────────────────────────────── */
 body.dark {
   --bg:          #0d0d0d;
   --surface:     #161616;
@@ -52,23 +54,22 @@ body.dark {
   --txt3:        #5e5c5c;
   --primary:     #f0eeee;
   --on-primary:  #0d0d0d;
-  --green:       #4ade80;
-  --green-bg:    rgba(74,222,128,0.14);
-  --green-tint:  rgba(74,222,128,0.08);
-  --red:         #f87171;
-  --red-bg:      rgba(248,113,113,0.14);
-  --red-tint:    rgba(248,113,113,0.08);
-  --amber:       #fbbf24;
-  --amber-bg:    rgba(251,191,36,0.10);
+  --green:       #6b9b6b;
+  --green-bg:    rgba(107,155,107,0.12);
+  --green-tint:  rgba(107,155,107,0.08);
+  --red:         #c97a8a;
+  --red-bg:      rgba(201,122,138,0.12);
+  --red-tint:    rgba(201,122,138,0.08);
+  --notice:      #9a9898;
+  --notice-bg:   #1c1c1c;
+  --notice-border: rgba(255,255,255,0.12);
   --outline:     #666666;
   --outline-var: #383838;
 }
 
-/* ── Reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
 
-/* ── Base ──────────────────────────────────────────────────────────────── */
 body {
   background: var(--bg);
   color: var(--txt);
@@ -80,7 +81,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Material Icons ─────────────────────────────────────────────────────── */
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
@@ -90,89 +90,125 @@ body {
   user-select: none;
 }
 
-/* ── Top Navigation ─────────────────────────────────────────────────────── */
+/* ── Views (Phase 1) ───────────────────────────────────────────────────── */
+.view { display: none; }
+.view.view-active { display: block; }
+
+/* ── Top Navigation (Phase 2) ──────────────────────────────────────────── */
 .topnav {
   position: sticky; top: 0; z-index: 100;
-  height: 64px;
+  height: var(--topnav-h);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 20px 0 16px;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
+  gap: 16px;
 }
-.nav-left { display: flex; align-items: center; gap: 32px; }
+.nav-left { display: flex; align-items: center; gap: 20px; min-width: 0; }
 .brand-wordmark {
-  font-family: 'Playfair Display', serif;
-  font-size: 26px; font-weight: 700; font-style: italic;
-  color: var(--primary); letter-spacing: -0.5px;
-  line-height: 1;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 15px; font-weight: 600; font-style: normal;
+  color: var(--primary); letter-spacing: 0.045em;
+  line-height: 1; text-decoration: none; flex-shrink: 0;
+  text-transform: none;
 }
-.nav-links { display: flex; gap: 2px; }
-.nav-link {
-  display: inline-block;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--txt2); text-decoration: none;
-  padding: 6px 10px;
-  transition: color 0.15s, background 0.15s;
+.breadcrumb {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--txt3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.nav-link:hover { color: var(--primary); background: var(--surface-low); }
+.breadcrumb-root { color: var(--txt3); }
+.breadcrumb-sep { margin: 0 6px; opacity: 0.5; }
+#breadcrumb-current { color: var(--txt2); }
 
-.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.nav-menu-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  background: var(--surface-low);
+  border: 1px solid var(--border-md);
+  color: var(--txt);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.nav-menu-btn .material-symbols-outlined { font-size: 22px; }
+
 .status-pill {
   display: flex; align-items: center; gap: 8px;
-  padding: 7px 16px;
+  padding: 7px 14px;
   background: var(--surface-low);
   border: 1px solid var(--border-md);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; color: var(--txt2);
+  font-size: 10px; color: var(--txt2);
   white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .status-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--green);
-  animation: pulse 2.5s ease-in-out infinite;
   flex-shrink: 0;
 }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.status-dot.offline { background: var(--red); }
 
-/* ── App Shell ──────────────────────────────────────────────────────────── */
+/* ── App Shell ───────────────────────────────────────────────────────────── */
 .app-shell {
   display: flex;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - var(--topnav-h));
 }
 
-/* ── Side Navigation ────────────────────────────────────────────────────── */
+.nav-overlay {
+  display: none;
+  position: fixed; inset: 0; top: var(--topnav-h);
+  background: rgba(0,0,0,0.35);
+  z-index: 150;
+}
+.nav-overlay.is-visible { display: block; }
+
+/* ── Side Navigation (Phase 2) ─────────────────────────────────────────── */
 .side-nav {
-  width: 248px; flex-shrink: 0;
-  position: sticky; top: 64px;
-  height: calc(100vh - 64px);
+  width: var(--sidebar-w); flex-shrink: 0;
+  position: sticky; top: var(--topnav-h);
+  height: calc(100vh - var(--topnav-h));
   overflow-y: auto;
   display: flex; flex-direction: column;
   background: var(--surface-low);
   border-right: 1px solid var(--border);
-  padding: 0 0 24px;
+  padding: 0 0 20px;
+  z-index: 160;
 }
 .side-nav-brand {
-  padding: 24px 20px 20px;
+  padding: 22px 20px 18px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .side-brand-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 16px; font-weight: 600; font-style: italic;
-  color: var(--primary); margin-bottom: 4px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 10px; font-weight: 600; font-style: normal;
+  color: var(--txt3); margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: 0.1em;
 }
 .side-brand-sub {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--txt3);
-  text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 9px; color: var(--txt3);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 400;
 }
-.side-nav-items { flex: 1; list-style: none; padding: 4px 0; }
+.side-nav-label {
+  padding: 14px 20px 6px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--txt3);
+}
+.side-nav-items { list-style: none; padding: 2px 0; }
 .side-nav-items a {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 20px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--txt2); text-decoration: none;
-  transition: all 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   border-left: 2px solid transparent;
 }
 .side-nav-items a:hover {
@@ -191,46 +227,255 @@ body {
   padding: 16px 20px 0;
   margin-top: auto;
   border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
 }
-.btn-new-analysis {
+.btn-sidebar {
   width: 100%;
   padding: 10px;
-  background: transparent;
-  border: 1px solid var(--primary);
-  color: var(--primary);
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   cursor: pointer; transition: all 0.15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 }
-.btn-new-analysis:hover { background: var(--primary); color: var(--on-primary); }
+.btn-sidebar-primary {
+  background: var(--primary); color: var(--on-primary);
+  border: 1px solid var(--primary);
+}
+.btn-sidebar-primary:hover { opacity: 0.88; }
+.btn-sidebar-outline {
+  background: transparent; color: var(--txt2);
+  border: 1px solid var(--border-dark);
+}
+.btn-sidebar-outline:hover {
+  background: var(--surface-mid); color: var(--primary);
+}
 
-/* ── Main Content ───────────────────────────────────────────────────────── */
+/* ── Main Content ────────────────────────────────────────────────────────── */
 .main-content {
   flex: 1; min-width: 0;
   padding: 32px 36px 48px;
 }
 
-/* ── Page Header ────────────────────────────────────────────────────────── */
 .page-header {
   margin-bottom: 28px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--border-md);
 }
 .page-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 44px; font-weight: 700; letter-spacing: -0.02em;
-  color: var(--primary); line-height: 1.05;
-  margin-bottom: 10px;
+  font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  font-size: 2.375rem; font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--primary); line-height: 1.12;
+  margin-bottom: 12px;
+  font-optical-sizing: auto;
 }
-.page-title em { font-style: italic; }
+.page-title em {
+  font-style: italic; font-weight: 600;
+}
 .page-sub {
-  font-size: 14px; color: var(--txt2); line-height: 1.65;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px; font-weight: 400; color: var(--txt2); line-height: 1.65;
   border-left: 2px solid var(--border-dark);
   padding-left: 14px;
-  max-width: 600px;
+  max-width: 640px;
 }
 
-/* ── Controls Bar ───────────────────────────────────────────────────────── */
+/* ── Dashboard homepage ──────────────────────────────────────────────────── */
+.kpi-card {
+  padding: 22px 22px 20px;
+}
+.kpi-card .stat-val { margin-bottom: 2px; }
+.kpi-card .stat-det { margin-bottom: 0; }
+
+.dash-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.dash-block-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  flex-wrap: wrap; gap: 8px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-block-title {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--primary);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.dash-block-title em { font-style: normal; font-weight: 600; }
+.dash-block-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--txt3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.dash-block-body { padding: 0; }
+.dash-view-link {
+  display: block;
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--txt2);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.dash-view-link:hover {
+  background: var(--surface-low);
+  color: var(--primary);
+}
+
+.dash-featured-body { padding: 28px 28px 32px; }
+.dash-featured-inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px 40px;
+  align-items: start;
+}
+.dash-featured-primary { min-width: 0; }
+.dash-featured-ticker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.625rem; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--primary); line-height: 1.15;
+  margin-bottom: 10px;
+}
+.dash-featured-conf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px; font-weight: 600;
+  color: var(--green); letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+.dash-featured-conf span {
+  font-size: 12px; font-weight: 500; color: var(--txt3);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-left: 8px;
+}
+.dash-featured-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px 24px;
+}
+.dash-metric-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--txt3);
+  margin-bottom: 6px;
+}
+.dash-metric-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px; font-weight: 500; color: var(--primary);
+}
+.dash-featured-aside {
+  text-align: right;
+  padding-top: 4px;
+}
+.dash-featured-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px; font-weight: 500;
+  color: var(--primary); margin-bottom: 6px;
+}
+.dash-featured-price-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--txt3);
+}
+
+.dash-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.dash-split .dash-block { margin-bottom: 0; }
+
+.dash-mini-table { width: 100%; border-collapse: collapse; }
+.dash-mini-table th {
+  text-align: left; padding: 10px 22px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--txt3);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-low);
+}
+.dash-mini-table td {
+  padding: 12px 22px;
+  font-size: 13px; border-bottom: 1px solid var(--border);
+}
+.dash-mini-table tr:last-child td { border-bottom: none; }
+.dash-mini-table tbody tr:hover { background: var(--surface-low); }
+
+.dash-outcome {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.dash-outcome.win { color: var(--green); }
+.dash-outcome.loss { color: var(--red); }
+.dash-outcome.pend { color: var(--txt3); }
+
+.dash-empty {
+  padding: 36px 22px;
+  text-align: center;
+}
+.dash-empty-t {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px; font-weight: 500; font-style: normal;
+  color: var(--txt2); margin-bottom: 6px;
+}
+.dash-empty-s { font-size: 12px; color: var(--txt3); line-height: 1.5; }
+.dash-empty-s a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.dash-empty-s a:hover { text-decoration: underline; }
+
+/* ── Prose (Phase 1 — About / Methodology) ───────────────────────────────── */
+.prose { max-width: 720px; }
+.prose h2 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--primary);
+  letter-spacing: 0.03em; text-transform: uppercase;
+  margin: 28px 0 12px;
+}
+.prose h2:first-child { margin-top: 0; }
+.prose p {
+  font-size: 14px; color: var(--txt2); line-height: 1.7;
+  margin-bottom: 14px;
+}
+.prose ul {
+  list-style: none; margin: 0 0 16px;
+}
+.prose ul li {
+  font-size: 13px; color: var(--txt2); line-height: 1.6;
+  padding: 6px 0 6px 16px;
+  border-left: 2px solid var(--border-md);
+  margin-bottom: 6px;
+}
+.prose-dl {
+  display: grid; gap: 10px; margin-bottom: 20px;
+}
+.prose-dl div {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.prose-dl dt {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--txt3);
+}
+.prose-dl dd { color: var(--txt2); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+/* ── Notice bar (Phase 1 — replaces amber resolve banner) ────────────────── */
+.notice-bar,
+.resolve-banner {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
+  border-left: 3px solid var(--primary);
+  margin-bottom: 20px;
+  font-size: 13px; color: var(--notice);
+}
+.resolve-banner .btn-close {
+  background: transparent; border: none;
+  color: var(--txt2); cursor: pointer;
+  padding: 2px; display: flex; align-items: center;
+}
+
 .ctrl-bar {
   display: flex; align-items: center; gap: 16px;
   background: var(--surface);
@@ -263,7 +508,7 @@ body {
   background: var(--primary); border-radius: 50%;
   cursor: pointer; transition: transform 0.15s;
 }
-.slider::-webkit-slider-thumb:hover { transform: scale(1.3); }
+.slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .slider::-moz-range-thumb {
   width: 14px; height: 14px;
   background: var(--primary); border: none;
@@ -271,7 +516,6 @@ body {
 }
 .ctrl-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* ── Buttons ────────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 18px;
@@ -282,44 +526,25 @@ body {
   border: 1px solid transparent;
 }
 .btn .material-symbols-outlined { font-size: 16px; }
-
 .btn-primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
-.btn-primary:hover { background: #222; border-color: #222; }
+.btn-primary:hover { opacity: 0.9; }
 .btn-primary:disabled {
   background: var(--surface-max); color: var(--txt3);
-  border-color: transparent; cursor: not-allowed;
+  border-color: transparent; cursor: not-allowed; opacity: 1;
 }
 .btn-outline {
   background: transparent; color: var(--txt2);
   border-color: var(--border-dark);
 }
-.btn-outline:hover { background: var(--surface-low); color: var(--primary); border-color: var(--border-dark); }
-
+.btn-outline:hover { background: var(--surface-low); color: var(--primary); }
 .btn-green {
   background: var(--green-tint); color: var(--green);
   border-color: rgba(61,104,61,0.18);
 }
 .btn-green:hover { background: rgba(61,104,61,0.14); }
 
-/* ── Resolve Banner ─────────────────────────────────────────────────────── */
-.resolve-banner {
-  display: none;
-  align-items: center; justify-content: space-between;
-  padding: 12px 20px;
-  background: var(--amber-bg);
-  border: 1px solid rgba(180,83,9,0.18);
-  border-left: 3px solid var(--amber);
-  margin-bottom: 20px;
-  font-size: 13px; color: var(--amber);
-}
-.resolve-banner .btn-close {
-  background: transparent; border: none;
-  color: var(--amber); cursor: pointer;
-  padding: 2px; display: flex; align-items: center;
-  font-family: inherit; font-size: 14px;
-}
-
-/* ── Stats Row ──────────────────────────────────────────────────────────── */
+/* ── KPI grid (Phase 1 alias for stats-row) ──────────────────────────────── */
+.kpi-grid,
 .stats-row {
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 14px; margin-bottom: 24px;
@@ -331,34 +556,22 @@ body {
   display: flex; flex-direction: column;
   position: relative; overflow: hidden;
 }
-.stat-card::before {
-  content: ''; position: absolute; top: 0; left: 0;
-  right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-dark), transparent);
-}
 .stat-label {
   font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--txt3); margin-bottom: 8px;
 }
 .stat-val {
-  font-family: 'Playfair Display', serif;
-  font-size: 36px; font-weight: 700; line-height: 1.05;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.75rem; font-weight: 500; line-height: 1.15;
   color: var(--primary); letter-spacing: -0.02em;
 }
 .stat-val.acc  { color: var(--primary); }
 .stat-val.grn  { color: var(--green); }
 .stat-det {
   font-size: 11px; color: var(--txt2);
-  margin-top: 4px; margin-bottom: 10px;
+  margin-top: 6px;
 }
-.stat-bar {
-  height: 2px; background: var(--surface-max);
-  margin-top: auto; overflow: hidden;
-}
-.stat-bar-fill { height: 100%; background: var(--primary); }
-.stat-bar-fill.green { background: var(--green); }
 
-/* ── Content Sections ───────────────────────────────────────────────────── */
 .section {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -372,17 +585,17 @@ body {
   background: var(--surface);
 }
 .sec-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px; font-weight: 600; color: var(--primary);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--primary);
+  letter-spacing: 0.04em; text-transform: uppercase;
 }
-.sec-title em { font-style: italic; }
+.sec-title em { font-style: normal; font-weight: 600; }
 .sec-meta {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px; color: var(--txt3);
   text-transform: uppercase; letter-spacing: 0.1em;
 }
 
-/* ── Table ──────────────────────────────────────────────────────────────── */
 .tbl { width: 100%; border-collapse: collapse; }
 .tbl thead tr { background: var(--surface-low); }
 .tbl th {
@@ -400,10 +613,9 @@ body {
 .tbl tr:last-child td { border-bottom: none; }
 .tbl tbody tr:hover { background: var(--surface-low); transition: background 0.1s; }
 
-/* ── Table Cell Classes (used by JS) ────────────────────────────────────── */
 .rank {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px; font-style: italic; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-style: normal; font-weight: 500;
   color: var(--txt3);
 }
 .ticker-sym {
@@ -446,16 +658,14 @@ body {
 .vol { font-family: 'JetBrains Mono', monospace; color: var(--txt2); font-size: 13px; }
 .vol.spike { color: var(--primary); font-weight: 600; }
 
-/* ── History Row Classes (used by JS) ───────────────────────────────────── */
 .hist-row-win td  { border-left: 3px solid var(--green); }
 .hist-row-loss td { border-left: 3px solid var(--red); }
 .hist-row-pend td { border-left: 3px solid var(--outline-var); }
 
-/* ── Empty / Loading States ─────────────────────────────────────────────── */
 .empty { padding: 64px 24px; text-align: center; }
 .empty-t {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px; font-style: italic;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 15px; font-weight: 500; font-style: normal;
   color: var(--txt2); margin-bottom: 8px;
 }
 .empty-s { font-size: 12px; color: var(--txt3); }
@@ -475,7 +685,6 @@ body {
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 
-/* ── Excel Notice ───────────────────────────────────────────────────────── */
 .xl-notice {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 20px;
@@ -485,20 +694,20 @@ body {
 }
 .xl-notice strong { font-family: 'JetBrains Mono', monospace; }
 
-/* ── Risk Section ───────────────────────────────────────────────────────── */
 .risk {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--primary);
   padding: 24px 28px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 .risk-t {
-  font-family: 'Playfair Display', serif;
-  font-size: 18px; font-weight: 600; color: var(--primary);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--primary);
+  letter-spacing: 0.04em; text-transform: uppercase;
   margin-bottom: 16px;
 }
-.risk-t em { font-style: italic; }
+.risk-t em { font-style: normal; font-weight: 600; }
 .risk-rules {
   display: grid; grid-template-columns: repeat(2, 1fr);
   gap: 10px; list-style: none;
@@ -509,7 +718,6 @@ body {
 }
 .risk-rules li::before { content: '→'; color: var(--primary); font-weight: 700; flex-shrink: 0; }
 
-/* ── Theme Toggle Button ────────────────────────────────────────────────── */
 .theme-toggle {
   display: flex; align-items: center; gap: 7px;
   padding: 6px 12px;
@@ -521,7 +729,7 @@ body {
   cursor: pointer; transition: background 0.2s, border-color 0.2s;
 }
 .theme-toggle:hover { background: var(--surface-mid); }
-.theme-toggle .material-symbols-outlined { font-size: 16px; transition: color 0.2s; }
+.theme-toggle .material-symbols-outlined { font-size: 16px; }
 .toggle-lbl { transition: opacity 0.2s; }
 .toggle-lbl-light { opacity: 1; color: var(--txt); }
 .toggle-lbl-dark  { opacity: 0.35; }
@@ -548,37 +756,51 @@ body.dark .toggle-thumb {
   background: var(--on-primary);
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 960px) {
-  .side-nav { display: none; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .nav-menu-btn { display: flex; }
+  .breadcrumb { display: none; }
+  .side-nav {
+    position: fixed; left: 0; top: var(--topnav-h);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.08);
+  }
+  body.dark .side-nav { box-shadow: 4px 0 24px rgba(0,0,0,0.4); }
+  .side-nav.is-open { transform: translateX(0); }
+  .kpi-grid, .stats-row { grid-template-columns: repeat(2, 1fr); }
   .ctrl-bar { flex-direction: column; align-items: stretch; }
   .ctrl-actions { justify-content: flex-end; }
-  .page-title { font-size: 32px; }
-  .risk-rules { grid-template-columns: 1fr; }
+  .page-title { font-size: 1.875rem; }
+  .risk-rules, .dash-split { grid-template-columns: 1fr; }
+  .dash-featured-metrics { grid-template-columns: repeat(2, 1fr); }
+  .dash-featured-inner { grid-template-columns: 1fr; }
+  .dash-featured-aside { text-align: left; margin-top: 8px; }
+  .status-pill { max-width: 160px; }
 }
 @media (max-width: 600px) {
   .main-content { padding: 16px; }
-  .stats-row { grid-template-columns: 1fr 1fr; }
-  .nav-links { display: none; }
-  .page-title { font-size: 26px; }
+  .kpi-grid, .stats-row { grid-template-columns: 1fr 1fr; }
+  .page-title { font-size: 1.625rem; }
+  .prose-dl div { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 
-<!-- ── TOP NAVIGATION ──────────────────────────────────────────────────── -->
 <header class="topnav">
+  <button type="button" class="nav-menu-btn" id="nav-menu-btn" aria-label="Open navigation">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
   <div class="nav-left">
-    <span class="brand-wordmark">Quant.ML</span>
-    <nav class="nav-links">
-      <a class="nav-link" href="#">Markets</a>
-      <a class="nav-link" href="#">Screener</a>
-      <a class="nav-link" href="#">Research</a>
-    </nav>
+    <a class="brand-wordmark" href="#/">Signal Desk</a>
+    <span class="breadcrumb">
+      <span class="breadcrumb-root">Signal Desk</span>
+      <span class="breadcrumb-sep">/</span>
+      <span id="breadcrumb-current">Dashboard</span>
+    </span>
   </div>
   <div class="nav-right">
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+    <button type="button" class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
       <span class="material-symbols-outlined">wb_sunny</span>
       <span class="toggle-lbl toggle-lbl-light">LIGHT</span>
       <div class="toggle-track"><div class="toggle-thumb"></div></div>
@@ -592,185 +814,486 @@ body.dark .toggle-thumb {
   </div>
 </header>
 
-<!-- ── APP SHELL ───────────────────────────────────────────────────────── -->
 <div class="app-shell">
+  <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 
-  <!-- SIDE NAV -->
-  <aside class="side-nav">
+  <aside class="side-nav" id="side-nav">
     <div class="side-nav-brand">
-      <div class="side-brand-title">NSE Terminal</div>
-      <div class="side-brand-sub">Engine v2.0 Active</div>
+      <div class="side-brand-title">Research console</div>
+      <div class="side-brand-sub" id="engine-sub">NSE · v2.0</div>
     </div>
+
+    <div class="side-nav-label">Primary</div>
     <ul class="side-nav-items">
-      <li>
-        <a class="active" href="#">
-          <span class="material-symbols-outlined">dashboard</span>
-          Dashboard
-        </a>
-      </li>
-      <li>
-        <a href="#">
-          <span class="material-symbols-outlined">sensors</span>
-          Live Signals
-        </a>
-      </li>
-      <li>
-        <a href="#">
-          <span class="material-symbols-outlined">history</span>
-          Trade History
-        </a>
-      </li>
-      <li>
-        <a href="#">
-          <span class="material-symbols-outlined">account_balance_wallet</span>
-          Portfolio
-        </a>
-      </li>
+      <li><a href="#/" data-nav="dashboard" class="active">
+        <span class="material-symbols-outlined">dashboard</span> Dashboard
+      </a></li>
+      <li><a href="#/signals" data-nav="signals">
+        <span class="material-symbols-outlined">sensors</span> Signals
+      </a></li>
+      <li><a href="#/history" data-nav="history">
+        <span class="material-symbols-outlined">history</span> History
+      </a></li>
     </ul>
+
+    <div class="side-nav-label">Research</div>
+    <ul class="side-nav-items">
+      <li><a href="#/methodology" data-nav="methodology">
+        <span class="material-symbols-outlined">menu_book</span> Methodology
+      </a></li>
+      <li><a href="#/about" data-nav="about">
+        <span class="material-symbols-outlined">info</span> About
+      </a></li>
+    </ul>
+
     <div class="side-nav-footer">
-      <button class="btn-new-analysis">New Analysis</button>
-      <div style="margin-top:16px; display:flex; flex-direction:column; gap:2px;">
-        <a href="#" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--txt2);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-          <span class="material-symbols-outlined" style="font-size:16px">description</span> Docs
-        </a>
-        <a href="#" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--txt2);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-          <span class="material-symbols-outlined" style="font-size:16px">help</span> Support
-        </a>
-      </div>
+      <button type="button" class="btn-sidebar btn-sidebar-primary" onclick="goToSignalsAndScan()">
+        <span class="material-symbols-outlined">play_arrow</span> Run Scanner
+      </button>
+      <button type="button" class="btn-sidebar btn-sidebar-outline" onclick="openExcel()">
+        <span class="material-symbols-outlined">table_chart</span> Excel Log
+      </button>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main-content">
 
-    <!-- PAGE HEADER -->
-    <div class="page-header">
-      <h1 class="page-title">Find the <em>signal</em> in the noise.</h1>
-      <p class="page-sub">XGBoost model scans 200 NSE stocks daily for high-probability 5-day setups. Signals auto-logged to Excel. Exit prices auto-filled after 5 days.</p>
-    </div>
+    <!-- ── DASHBOARD ─────────────────────────────────────────────────────── -->
+    <div class="view view-active" data-view="dashboard" id="view-dashboard">
+      <div class="page-header">
+        <h1 class="page-title">Research <em>Dashboard</em></h1>
+        <p class="page-sub">Morning brief for the NSE liquid universe — latest scan highlights, ranked signals, and recent paper-trade activity.</p>
+      </div>
 
-    <!-- CONTROLS -->
-    <div class="ctrl-bar">
-      <div class="ctrl-threshold">
-        <div class="ctrl-label">
-          <span>Confidence Threshold</span>
-          <span id="thr-val">60%</span>
+      <div class="kpi-grid stats-row">
+        <div class="stat-card kpi-card">
+          <div class="stat-label">Universe</div>
+          <div class="stat-val" id="dash-universe">200</div>
+          <div class="stat-det">NSE / BSE liquid stocks</div>
         </div>
-        <input type="range" min="50" max="85" value="60" class="slider" id="slider">
-      </div>
-      <div class="ctrl-actions">
-        <button class="btn btn-green" onclick="checkResolved()">
-          <span class="material-symbols-outlined">sync</span>
-          Resolve Exits
-        </button>
-        <button class="btn btn-outline" onclick="openExcel()">
-          <span class="material-symbols-outlined">table_chart</span>
-          Excel Log
-        </button>
-        <button class="btn btn-primary" id="scan-btn" onclick="runScan()">
-          <span class="material-symbols-outlined">play_arrow</span>
-          Run Scanner
-        </button>
-      </div>
-    </div>
-
-    <!-- RESOLVE BANNER -->
-    <div class="resolve-banner" id="resolve-banner">
-      <span id="resolve-msg">Checking pending trades...</span>
-      <button class="btn-close" onclick="document.getElementById('resolve-banner').style.display='none'">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Universe</div>
-        <div class="stat-val">200</div>
-        <div class="stat-det">NSE / BSE liquid stocks</div>
-        <div class="stat-bar"><div class="stat-bar-fill" style="width:100%"></div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Signals Today</div>
-        <div class="stat-val acc" id="sig-count">—</div>
-        <div class="stat-det" id="sig-detail">Run scan to see</div>
-        <div class="stat-bar"><div class="stat-bar-fill green" style="width:0%"></div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Top Confidence</div>
-        <div class="stat-val grn" id="top-conf">—</div>
-        <div class="stat-det" id="top-tick">—</div>
-        <div class="stat-bar"><div class="stat-bar-fill green" style="width:0%"></div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Last Scan</div>
-        <div class="stat-val" id="last-time" style="font-size:22px;font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:-0.01em;">—</div>
-        <div class="stat-det" id="last-date">—</div>
-        <div class="stat-bar"><div class="stat-bar-fill" style="width:35%"></div></div>
-      </div>
-    </div>
-
-    <!-- SIGNALS SECTION -->
-    <div class="section">
-      <div class="sec-head">
-        <div class="sec-title">Today's <em>Picks</em></div>
-        <div class="sec-meta" id="tbl-meta">Awaiting scan</div>
-      </div>
-      <div id="signals-box">
-        <div class="empty">
-          <div class="empty-t">Loading last scan...</div>
-          <div class="empty-s">Fetching previous results from disk</div>
+        <div class="stat-card kpi-card">
+          <div class="stat-label">Signals Today</div>
+          <div class="stat-val acc" id="sig-count">—</div>
+          <div class="stat-det" id="sig-detail">Run scan to see</div>
+        </div>
+        <div class="stat-card kpi-card">
+          <div class="stat-label">Top Confidence</div>
+          <div class="stat-val grn" id="top-conf">—</div>
+          <div class="stat-det" id="top-tick">—</div>
+        </div>
+        <div class="stat-card kpi-card">
+          <div class="stat-label">Last Scan</div>
+          <div class="stat-val" id="last-time" style="font-size:22px;font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:-0.01em;">—</div>
+          <div class="stat-det" id="last-date">—</div>
         </div>
       </div>
+
+      <section class="dash-block dash-featured">
+        <div class="dash-block-head">
+          <h2 class="dash-block-title">Strongest Signal <em>Today</em></h2>
+          <span class="dash-block-meta" id="dash-featured-meta">Latest scan</span>
+        </div>
+        <div class="dash-block-body dash-featured-body" id="dash-featured">
+          <div class="dash-empty">
+            <div class="dash-empty-t">Awaiting scan data</div>
+            <div class="dash-empty-s">Run the scanner from <a href="#/signals">Signals</a> to populate this brief.</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="dash-split">
+        <section class="dash-block">
+          <div class="dash-block-head">
+            <h2 class="dash-block-title">Top <em>Signals</em></h2>
+            <span class="dash-block-meta" id="dash-signals-meta">Top 5 · latest scan</span>
+          </div>
+          <div class="dash-block-body" id="dash-top-signals">
+            <div class="dash-empty">
+              <div class="dash-empty-t">No ranked signals</div>
+              <div class="dash-empty-s">Signals appear here after a successful scan.</div>
+            </div>
+          </div>
+          <a class="dash-view-link" href="#/signals">View all signals →</a>
+        </section>
+
+        <section class="dash-block">
+          <div class="dash-block-head">
+            <h2 class="dash-block-title">Recent <em>Activity</em></h2>
+            <span class="dash-block-meta" id="dash-activity-meta">Last 5 · paper log</span>
+          </div>
+          <div class="dash-block-body" id="dash-recent-activity">
+            <div class="dash-empty">
+              <div class="dash-empty-t">No trades logged</div>
+              <div class="dash-empty-s">History fills after your first scan.</div>
+            </div>
+          </div>
+          <a class="dash-view-link" href="#/history">View full history →</a>
+        </section>
+      </div>
     </div>
 
-    <!-- HISTORY SECTION -->
-    <div class="section">
-      <div class="sec-head">
-        <div class="sec-title">Trade <em>History</em></div>
-        <div class="sec-meta" id="hist-meta">All logged signals</div>
+    <!-- ── SIGNALS ───────────────────────────────────────────────────────── -->
+    <div class="view" data-view="signals" id="view-signals">
+      <div class="page-header">
+        <h1 class="page-title">Live <em>Signals</em></h1>
+        <p class="page-sub">XGBoost model scans the NSE liquid universe for high-probability 5-day setups. Signals are auto-logged to Excel; exit prices auto-fill after the holding period.</p>
       </div>
-      <div id="history-box">
-        <div class="empty">
-          <div class="empty-t">No history yet</div>
-          <div class="empty-s">Past signals will appear here after your first scan</div>
+
+      <div class="ctrl-bar">
+        <div class="ctrl-threshold">
+          <div class="ctrl-label">
+            <span>Confidence Threshold</span>
+            <span id="thr-val">60%</span>
+          </div>
+          <input type="range" min="50" max="85" value="60" class="slider" id="slider">
+        </div>
+        <div class="ctrl-actions">
+          <button type="button" class="btn btn-green" onclick="checkResolved()">
+            <span class="material-symbols-outlined">sync</span>
+            Resolve Exits
+          </button>
+          <button type="button" class="btn btn-outline" onclick="openExcel()">
+            <span class="material-symbols-outlined">table_chart</span>
+            Excel Log
+          </button>
+          <button type="button" class="btn btn-primary" id="scan-btn" onclick="runScan()">
+            <span class="material-symbols-outlined">play_arrow</span>
+            Run Scanner
+          </button>
+        </div>
+      </div>
+
+      <div class="resolve-banner" id="resolve-banner">
+        <span id="resolve-msg">Checking pending trades...</span>
+        <button type="button" class="btn-close" onclick="document.getElementById('resolve-banner').style.display='none'">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <div class="sec-title">Today's <em>Picks</em></div>
+          <div class="sec-meta" id="tbl-meta">Awaiting scan</div>
+        </div>
+        <div id="signals-box">
+          <div class="empty">
+            <div class="empty-t">Loading last scan...</div>
+            <div class="empty-s">Fetching previous results from disk</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- RISK RULES -->
-    <div class="risk">
-      <div class="risk-t">Trading <em>Rules</em></div>
-      <ul class="risk-rules">
-        <li>Never put more than 10% of capital in one stock</li>
-        <li>Always set stop-loss at -3% from entry price</li>
-        <li>Exit positions after 5 trading days regardless of P&L</li>
-        <li>Three consecutive losses → stop trading for the week</li>
-        <li>Paper trade for 4-6 weeks before using real money</li>
-        <li>This is a tool, not a guarantee. Markets can break any model.</li>
-      </ul>
+    <!-- ── HISTORY ───────────────────────────────────────────────────────── -->
+    <div class="view" data-view="history" id="view-history">
+      <div class="page-header">
+        <h1 class="page-title">Trade <em>History</em></h1>
+        <p class="page-sub">Verified paper-trading ledger sourced from <strong>paper_trading_log.xlsx</strong>. Use Resolve Exits on the Signals page to update pending rows.</p>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <div class="sec-title">Signal <em>Ledger</em></div>
+          <div class="sec-meta" id="hist-meta">All logged signals</div>
+        </div>
+        <div id="history-box">
+          <div class="empty">
+            <div class="empty-t">No history yet</div>
+            <div class="empty-s">Past signals will appear here after your first scan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── METHODOLOGY ─────────────────────────────────────────────────────── -->
+    <div class="view" data-view="methodology" id="view-methodology">
+      <div class="page-header">
+        <h1 class="page-title">Research <em>Methodology</em></h1>
+        <p class="page-sub">How signals are produced, logged, and evaluated. This platform is for research and paper trading only.</p>
+      </div>
+
+      <div class="prose">
+        <h2>Objective</h2>
+        <p>Signal Desk identifies NSE-listed equities with elevated probability of a favorable 5-day move, using a gradient-boosted classifier trained on technical features. Output is a ranked confidence score, not a trade recommendation.</p>
+
+        <h2>Universe &amp; data</h2>
+        <p>Each scan processes a fixed liquid Nifty-aligned universe via Yahoo Finance (NSE/BSE suffixes). Six months of OHLCV history feed rolling technical indicators (returns, moving averages, RSI, volatility, volume ratios, Bollinger position).</p>
+
+        <h2>Model &amp; signal</h2>
+        <p>An XGBoost binary classifier outputs P(target=1) per ticker. Signals above the user-defined confidence threshold are ranked and logged. Features align with the training pipeline (<code>step1</code>–<code>step3</code> in this repository).</p>
+
+        <h2>Paper trading protocol</h2>
+        <ul>
+          <li>Each scan batch is written to Excel with entry price and a target exit date.</li>
+          <li>After seven calendar days, Resolve Exits fetches live prices and records outcome and return.</li>
+          <li>Performance aggregates are maintained on the Performance sheet in the workbook.</li>
+        </ul>
+      </div>
+
+      <div class="risk">
+        <div class="risk-t">Risk <em>Framework</em></div>
+        <ul class="risk-rules">
+          <li>Never put more than 10% of capital in one stock</li>
+          <li>Always set stop-loss at -3% from entry price</li>
+          <li>Exit positions after 5 trading days regardless of P&amp;L</li>
+          <li>Three consecutive losses → stop trading for the week</li>
+          <li>Paper trade for 4–6 weeks before using real money</li>
+          <li>This is a research tool, not a guarantee. Markets can break any model.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── ABOUT ─────────────────────────────────────────────────────────── -->
+    <div class="view" data-view="about" id="view-about">
+      <div class="page-header">
+        <h1 class="page-title">About <em>Signal Desk</em></h1>
+        <p class="page-sub">An institutional-style research terminal for systematic equity screening on Indian markets.</p>
+      </div>
+
+      <div class="prose">
+        <h2>Platform</h2>
+        <p>Signal Desk is a local research dashboard that connects a trained ML model to a daily NSE scan, Excel-based paper trading log, and signal history viewer. It is designed for disciplined experimentation—not discretionary hype or execution.</p>
+
+        <h2>System status</h2>
+        <dl class="prose-dl">
+          <div><dt>Model</dt><dd id="about-model">Checking…</dd></div>
+          <div><dt>Universe</dt><dd id="about-tickers">—</dd></div>
+          <div><dt>Last scan</dt><dd id="about-last-scan">—</dd></div>
+          <div><dt>Excel log</dt><dd id="about-excel">—</dd></div>
+        </dl>
+
+        <h2>Scope &amp; limitations</h2>
+        <p>Results depend on data quality, liquidity, and regime. Backtests and paper logs do not include slippage, fees, or corporate actions unless you add them externally. Nothing on this site constitutes investment advice.</p>
+
+        <h2>Stack</h2>
+        <ul>
+          <li>Python / Flask API, XGBoost, yfinance, openpyxl</li>
+          <li>Single-page interface with hash routing (no separate frontend build)</li>
+          <li>Run locally: <code>python app.py</code> → <code>http://localhost:5000</code></li>
+        </ul>
+      </div>
     </div>
 
   </main>
 </div>
 
 <script>
+// ── Hash router (Phase 2) ─────────────────────────────────────────────────
+const ROUTES = {
+  dashboard:   { title: 'Research Dashboard',   breadcrumb: 'Dashboard' },
+  signals:     { title: 'Live Signals',         breadcrumb: 'Signals' },
+  history:     { title: 'Trade History',        breadcrumb: 'History' },
+  methodology: { title: 'Methodology',          breadcrumb: 'Methodology' },
+  about:       { title: 'About',                breadcrumb: 'About' },
+};
+
+function getRouteFromHash() {
+  const raw = (location.hash || '#/').replace(/^#\/?/, '').split('?')[0].toLowerCase();
+  const route = raw || 'dashboard';
+  return ROUTES[route] ? route : 'dashboard';
+}
+
+function closeMobileNav() {
+  document.getElementById('side-nav').classList.remove('is-open');
+  document.getElementById('nav-overlay').classList.remove('is-visible');
+  document.getElementById('nav-overlay').setAttribute('aria-hidden', 'true');
+}
+
+function openMobileNav() {
+  document.getElementById('side-nav').classList.add('is-open');
+  document.getElementById('nav-overlay').classList.add('is-visible');
+  document.getElementById('nav-overlay').setAttribute('aria-hidden', 'false');
+}
+
+function onRouteChange() {
+  const raw = (location.hash || '#/').replace(/^#\/?/, '').split('?')[0].toLowerCase();
+  let route = raw || 'dashboard';
+  if (!ROUTES[route]) {
+    route = 'dashboard';
+    if (raw && location.hash !== '#/') history.replaceState(null, '', '#/');
+  }
+  const meta = ROUTES[route];
+
+  document.querySelectorAll('[data-view]').forEach(el => {
+    el.classList.toggle('view-active', el.dataset.view === route);
+  });
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.classList.toggle('active', el.dataset.nav === route);
+  });
+
+  document.getElementById('breadcrumb-current').textContent = meta.breadcrumb;
+  document.title = `Signal Desk — ${meta.title}`;
+  closeMobileNav();
+}
+
+function navigate(route) {
+  if (!ROUTES[route]) route = 'dashboard';
+  location.hash = '#/' + route;
+}
+
+function goToSignalsAndScan() {
+  navigate('signals');
+  runScan();
+}
+
+window.addEventListener('hashchange', onRouteChange);
+
+document.getElementById('nav-menu-btn').addEventListener('click', () => {
+  const nav = document.getElementById('side-nav');
+  if (nav.classList.contains('is-open')) closeMobileNav();
+  else openMobileNav();
+});
+document.getElementById('nav-overlay').addEventListener('click', closeMobileNav);
+
+document.querySelectorAll('[data-nav]').forEach(link => {
+  link.addEventListener('click', () => closeMobileNav());
+});
+
 // ── Slider ────────────────────────────────────────────────────────────────
 const slider = document.getElementById('slider');
 slider.addEventListener('input', e => {
   document.getElementById('thr-val').textContent = e.target.value + '%';
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// ── Helpers (unchanged — table styling deferred) ──────────────────────────
 function getRsiClass(r) { return r<40?'rsi-os':r>60?'rsi-ob':'rsi-nt'; }
 function getRsiLabel(r) { return r<30?'Oversold':r<40?'Weak':r>70?'Overbought':r>60?'Strong':'Neutral'; }
 function getConfColor(c) { return c>=0.70?'#22c55e':c>=0.65?'#eab308':'#a3a3a3'; }
 function getConfClass(c) { return c>=0.70?'cg':c>=0.65?'cy':'cw'; }
 
+function formatOutcomeLabel(raw) {
+  const s = String(raw || 'Pending');
+  if (s.includes('Win')) return { text: 'Win', cls: 'win' };
+  if (s.includes('Loss')) return { text: 'Loss', cls: 'loss' };
+  return { text: 'Pending', cls: 'pend' };
+}
+
+// ── Dashboard homepage renders ────────────────────────────────────────────
+function renderDashboardFromScan(data) {
+  const signals = data.signals || [];
+  const featuredEl = document.getElementById('dash-featured');
+  const topEl = document.getElementById('dash-top-signals');
+  const featuredMeta = document.getElementById('dash-featured-meta');
+  const signalsMeta = document.getElementById('dash-signals-meta');
+
+  const scanLabel = data.timestamp || (data.date && data.time ? `${data.date} · ${data.time}` : 'Latest scan');
+  featuredMeta.textContent = scanLabel;
+  signalsMeta.textContent = signals.length
+    ? `Top ${Math.min(5, signals.length)} of ${signals.length}`
+  : 'Top 5 · latest scan';
+
+  if (signals.length === 0) {
+    featuredEl.innerHTML = `
+      <div class="dash-empty">
+        <div class="dash-empty-t">No qualifying signals</div>
+        <div class="dash-empty-s">Nothing crossed the confidence threshold on the last scan. Adjust threshold on <a href="#/signals">Signals</a>.</div>
+      </div>`;
+    topEl.innerHTML = `
+      <div class="dash-empty">
+        <div class="dash-empty-t">No ranked signals</div>
+        <div class="dash-empty-s">Run a new scan to refresh this list.</div>
+      </div>`;
+    return;
+  }
+
+  const top = signals[0];
+  const confPct = (top.confidence * 100).toFixed(1);
+  const mom = top.momentum_5d;
+  const momCls = mom >= 0 ? 'pos' : 'neg';
+  const momSign = mom >= 0 ? '+' : '';
+
+  featuredEl.innerHTML = `
+    <div class="dash-featured-inner">
+      <div class="dash-featured-primary">
+        <div class="dash-featured-ticker">${top.ticker}</div>
+        <div class="dash-featured-conf">${confPct}%<span>model confidence</span></div>
+        <div class="dash-featured-metrics">
+          <div>
+            <div class="dash-metric-label">RSI (14)</div>
+            <div class="dash-metric-val">${top.rsi.toFixed(0)} · ${getRsiLabel(top.rsi)}</div>
+          </div>
+          <div>
+            <div class="dash-metric-label">Volume ratio</div>
+            <div class="dash-metric-val">${top.volume_ratio.toFixed(2)}× avg</div>
+          </div>
+          <div>
+            <div class="dash-metric-label">5d momentum</div>
+            <div class="dash-metric-val mom ${momCls}">${momSign}${mom.toFixed(2)}%</div>
+          </div>
+          <div>
+            <div class="dash-metric-label">Rank</div>
+            <div class="dash-metric-val">#1 of ${signals.length}</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-featured-aside">
+        <div class="dash-featured-price-lbl">Last close</div>
+        <div class="dash-featured-price">₹${top.close.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+      </div>
+    </div>`;
+
+  const preview = signals.slice(0, 5);
+  let table = `<table class="dash-mini-table"><thead><tr>
+    <th>#</th><th>Ticker</th><th>Conf.</th><th>Price</th><th>5d Mom.</th>
+  </tr></thead><tbody>`;
+  preview.forEach((s, i) => {
+    const cp = (s.confidence * 100).toFixed(1);
+    const mc = s.momentum_5d >= 0 ? 'pos' : 'neg';
+    const ms = s.momentum_5d >= 0 ? '+' : '';
+    table += `<tr>
+      <td><span class="rank">${i + 1}</span></td>
+      <td><span class="ticker-sym">${s.ticker}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:600">${cp}%</td>
+      <td class="price">₹${s.close.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+      <td class="mom ${mc}">${ms}${s.momentum_5d.toFixed(1)}%</td>
+    </tr>`;
+  });
+  table += '</tbody></table>';
+  topEl.innerHTML = table;
+}
+
+function renderDashboardRecent(rows) {
+  const el = document.getElementById('dash-recent-activity');
+  const meta = document.getElementById('dash-activity-meta');
+
+  if (!rows || rows.length === 0) {
+    meta.textContent = 'Last 5 · paper log';
+    el.innerHTML = `
+      <div class="dash-empty">
+        <div class="dash-empty-t">No trades logged</div>
+        <div class="dash-empty-s">Run the scanner to start building your ledger.</div>
+      </div>`;
+    return;
+  }
+
+  const recent = rows.slice(-5).reverse();
+  meta.textContent = `Last ${recent.length} of ${rows.length} logged`;
+
+  let table = `<table class="dash-mini-table"><thead><tr>
+    <th>Date</th><th>Ticker</th><th>Outcome</th><th>Return</th>
+  </tr></thead><tbody>`;
+
+  recent.forEach(r => {
+    const outcome = formatOutcomeLabel(r['Outcome']);
+    const retVal = r['Return%'];
+    const retColor = retVal > 0 ? 'color:var(--green)' : retVal < 0 ? 'color:var(--red)' : '';
+    const retStr = retVal !== '' && retVal != null
+      ? `${retVal > 0 ? '+' : ''}${retVal}%`
+      : '—';
+    table += `<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${String(r['Scan Date']).substring(0, 10)}</td>
+      <td><span class="ticker-sym">${r['Ticker'] || '—'}</span></td>
+      <td><span class="dash-outcome ${outcome.cls}">${outcome.text}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:600;${retColor}">${retStr}</td>
+    </tr>`;
+  });
+  table += '</tbody></table>';
+  el.innerHTML = table;
+}
+
 // ── Render signals ────────────────────────────────────────────────────────
 function renderSignals(data) {
   const signals = data.signals || [];
-  const now = data.timestamp || new Date().toLocaleTimeString();
 
   document.getElementById('sig-count').textContent = signals.length || '0';
   document.getElementById('sig-detail').textContent =
@@ -792,6 +1315,8 @@ function renderSignals(data) {
 
   document.getElementById('tbl-meta').textContent =
     signals.length > 0 ? `${signals.length} signals · auto-saved to Excel` : 'No signals found';
+
+  renderDashboardFromScan(data);
 
   if (signals.length === 0) {
     document.getElementById('signals-box').innerHTML = `
@@ -842,6 +1367,7 @@ async function loadHistory() {
     const rows = data.history || [];
 
     document.getElementById('hist-meta').textContent = `${rows.length} total signals logged`;
+    renderDashboardRecent(rows);
 
     if (rows.length === 0) {
       document.getElementById('history-box').innerHTML = `
@@ -850,7 +1376,6 @@ async function loadHistory() {
       return;
     }
 
-    // Show last 20, newest first
     const recent = rows.slice(-20).reverse();
     let html = `<table class="tbl"><thead><tr>
       <th>Date</th><th>Ticker</th><th>Conf%</th><th>Entry ₹</th>
@@ -877,10 +1402,11 @@ async function loadHistory() {
     document.getElementById('history-box').innerHTML = html;
   } catch(e) {
     document.getElementById('history-box').innerHTML = `<div class="empty"><div class="empty-t">Could not load history</div></div>`;
+    renderDashboardRecent([]);
   }
 }
 
-// ── Run scan ──────────────────────────────────────────────────────────────
+// ── Run scan (unchanged logic) ────────────────────────────────────────────
 async function runScan() {
   const threshold = slider.value / 100;
   const btn = document.getElementById('scan-btn');
@@ -906,7 +1432,7 @@ async function runScan() {
     document.getElementById('signals-box').innerHTML = `<div class="empty"><div class="empty-t">Connection lost</div><div class="empty-s">${e.message}</div></div>`;
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '▸ Run Scanner';
+    btn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Run Scanner';
   }
 }
 
@@ -914,20 +1440,20 @@ async function runScan() {
 async function checkResolved() {
   const banner = document.getElementById('resolve-banner');
   banner.style.display = 'flex';
-  document.getElementById('resolve-msg').textContent = '↻ Checking pending trades and fetching exit prices...';
+  document.getElementById('resolve-msg').textContent = 'Checking pending trades and fetching exit prices...';
 
   try {
     const r = await fetch('/api/resolve');
     const data = await r.json();
     if (data.resolved_count === 0) {
-      document.getElementById('resolve-msg').textContent = '✓ No trades ready to resolve yet (need 5+ trading days)';
+      document.getElementById('resolve-msg').textContent = 'No trades ready to resolve yet (need 7+ calendar days)';
     } else {
       document.getElementById('resolve-msg').textContent =
-        `✅ ${data.resolved_count} trade(s) resolved! Exit prices filled in Excel automatically.`;
+        `${data.resolved_count} trade(s) resolved. Exit prices filled in Excel.`;
       loadHistory();
     }
   } catch(e) {
-    document.getElementById('resolve-msg').textContent = '❌ Error: ' + e.message;
+    document.getElementById('resolve-msg').textContent = 'Error: ' + e.message;
   }
 }
 
@@ -942,33 +1468,42 @@ async function openExcel() {
   }
 }
 
-// ── On page load: restore last scan ──────────────────────────────────────
+// ── Populate About + status from API ──────────────────────────────────────
 async function init() {
-  // Check model status
   try {
     const r = await fetch('/api/status');
     const data = await r.json();
     const dot = document.getElementById('dot');
     const txt = document.getElementById('status-text');
+
     if (data.model_loaded) {
       txt.textContent = `Model Online · ${data.total_tickers} tickers`;
+      dot.classList.remove('offline');
+      document.getElementById('about-model').textContent = 'Loaded (XGBoost)';
     } else {
       txt.textContent = 'Model Not Found';
-      dot.style.background = '#ef4444';
-      dot.style.boxShadow = '0 0 12px #ef4444';
+      dot.classList.add('offline');
+      document.getElementById('about-model').textContent = 'Not loaded — run step3_train_model.py';
     }
+
+    document.getElementById('dash-universe').textContent = data.total_tickers || '—';
+    document.getElementById('about-tickers').textContent = `${data.total_tickers || '—'} tickers`;
+    document.getElementById('about-excel').textContent = data.excel_exists ? 'paper_trading_log.xlsx present' : 'Not created yet';
+    document.getElementById('about-last-scan').textContent = data.last_scan_time || 'None';
+    document.getElementById('engine-sub').textContent = data.model_loaded ? 'NSE · online' : 'NSE · offline';
+
     if (data.last_scan_time) {
       document.getElementById('last-date').textContent = `Last: ${data.last_scan_time}`;
     }
   } catch(e) {}
 
-  // Load last scan result
   try {
     const r = await fetch('/api/last_scan');
     const data = await r.json();
     if (data.signals && data.signals.length >= 0 && data.processed) {
       renderSignals(data);
     } else {
+      renderDashboardFromScan({ signals: [], processed: data.processed, total: data.total, timestamp: data.timestamp });
       document.getElementById('signals-box').innerHTML = `
         <div class="empty">
           <div class="empty-t">Ready to scan</div>
@@ -976,6 +1511,7 @@ async function init() {
         </div>`;
     }
   } catch(e) {
+    renderDashboardFromScan({ signals: [] });
     document.getElementById('signals-box').innerHTML = `
       <div class="empty">
         <div class="empty-t">Ready to scan</div>
@@ -983,7 +1519,6 @@ async function init() {
       </div>`;
   }
 
-  // Load history
   loadHistory();
 }
 
@@ -996,6 +1531,7 @@ function toggleTheme() {
   if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 })();
 
+onRouteChange();
 init();
 </script>
 </body>
