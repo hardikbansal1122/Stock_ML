@@ -185,22 +185,97 @@ def build_trade_df(signals, prices):
     return pd.DataFrame(trades)
 
 
-def simulate_portfolio(trades_df):
-    portfolio_val = STARTING_CAPITAL
-    portfolio_history = []
+def get_price_on_date(price_series, date):
+    if date in price_series.index:
+        return float(price_series.loc[date])
+    prior = price_series[price_series.index < date]
+    if len(prior) == 0:
+        return None
+    return float(prior.iloc[-1])
 
+
+def simulate_portfolio(trades_df, prices):
+    cash = STARTING_CAPITAL
+    locked_cash = 0.0
+    realized_pnl = 0.0
+    portfolio_history = []
+    open_positions = []
+
+    entry_buckets = {}
+    max_exit_date = trades_df['Date'].max()
     for date, day_trades in trades_df.groupby('Date'):
-        day_top = day_trades.sort_values('Confidence', ascending=False).head(MAX_POSITIONS)
-        for _, t in day_top.iterrows():
-            position_size = portfolio_val * POSITION_SIZE
-            profit = position_size * t['NetReturn']
-            portfolio_val += profit
-        portfolio_history.append({'Date': date, 'Value': portfolio_val})
+        entry_buckets[date] = day_trades.sort_values('Confidence', ascending=False).head(MAX_POSITIONS)
+
+    for date, day_trades in entry_buckets.items():
+        day_trades = day_trades.copy()
+        for idx, t in day_trades.iterrows():
+            price_index = prices[t['Ticker']].index
+            pos = price_index.get_indexer([t['Date']])[0]
+            exit_date = price_index[pos + HOLD_DAYS]
+            max_exit_date = max(max_exit_date, exit_date)
+            day_trades.loc[idx, 'ExitDate'] = exit_date
+        entry_buckets[date] = day_trades
+
+    calendar_dates = sorted({d for ticker in trades_df['Ticker'].unique() if ticker in prices for d in prices[ticker].index})
+    calendar_dates = [d for d in calendar_dates if d >= trades_df['Date'].min() and d <= max_exit_date]
+
+    for today in calendar_dates:
+        # Process exits first
+        exits = [p for p in open_positions if p['ExitDate'] == today]
+        for pos in exits:
+            pnl = pos['LockedCash'] * pos['NetReturn']
+            cash += pos['LockedCash'] + pnl
+            locked_cash -= pos['LockedCash']
+            realized_pnl += pnl
+            open_positions.remove(pos)
+
+        if today in entry_buckets and len(open_positions) < MAX_POSITIONS:
+            for _, t in entry_buckets[today].iterrows():
+                if len(open_positions) >= MAX_POSITIONS:
+                    break
+                available_cash = cash
+                if available_cash <= 0:
+                    break
+                locked_amount = min(available_cash, (cash + sum(get_price_on_date(prices[pos['Ticker']], today) * pos['Quantity'] for pos in open_positions)) * POSITION_SIZE)
+                if locked_amount <= 0:
+                    break
+                quantity = locked_amount / t['EntryPrice']
+                open_positions.append({
+                    'Ticker':      t['Ticker'],
+                    'EntryDate':   t['Date'],
+                    'ExitDate':    t['ExitDate'],
+                    'EntryPrice':  t['EntryPrice'],
+                    'ExitPrice':   t['ExitPrice'],
+                    'Quantity':    quantity,
+                    'LockedCash':  locked_amount,
+                    'NetReturn':   t['NetReturn'],
+                    'Confidence':  t['Confidence'],
+                })
+                cash -= locked_amount
+                locked_cash += locked_amount
+
+        unrealized_value = 0.0
+        for pos in open_positions:
+            current_price = get_price_on_date(prices[pos['Ticker']], today)
+            if current_price is None:
+                current_price = pos['EntryPrice']
+            unrealized_value += pos['Quantity'] * current_price
+
+        total_value = cash + unrealized_value
+        portfolio_history.append({
+            'Date': today,
+            'Cash': cash,
+            'LockedCash': locked_cash,
+            'UnrealizedValue': unrealized_value,
+            'TotalValue': total_value,
+            'PositionsOpen': len(open_positions),
+        })
 
     port_df = pd.DataFrame(portfolio_history)
     if len(port_df) > 0:
-        port_df['Drawdown'] = port_df['Value'] / port_df['Value'].cummax() - 1
-        total_return = (portfolio_val - STARTING_CAPITAL) / STARTING_CAPITAL * 100
+        port_df['Value'] = port_df['TotalValue']
+        port_df['Drawdown'] = port_df['TotalValue'] / port_df['TotalValue'].cummax() - 1
+        total_return = (port_df['TotalValue'].iloc[-1] - STARTING_CAPITAL) / STARTING_CAPITAL * 100
         max_dd = port_df['Drawdown'].min() * 100
     else:
         total_return = 0.0
@@ -284,7 +359,7 @@ for threshold in CONFIDENCE_THRESHOLDS:
     win_rate = trades_df['Won'].mean() * 100
     avg_ret = trades_df['NetReturn'].mean() * 100
 
-    port_df, total_return, max_dd = simulate_portfolio(trades_df)
+    port_df, total_return, max_dd = simulate_portfolio(trades_df, prices)
 
     print(f"   Win rate         : {win_rate:.1f}%")
     print(f"   Avg net return   : {avg_ret:+.2f}% per trade")
@@ -363,37 +438,17 @@ path_analytics_summary = print_path_analytics_v2(trades_df, HOLD_DAYS)
 # ── Portfolio simulation ──────────────────────────────────────────────────
 print(f"\n Portfolio Simulation (₹{STARTING_CAPITAL:,.0f} starting capital):")
 
-portfolio_val = STARTING_CAPITAL
-portfolio_history = []
-
-# Sort by date, simulate taking up to MAX_POSITIONS per day
-for date, day_trades in trades_df.groupby('Date'):
-    # Take top signals by confidence
-    day_top = day_trades.sort_values('Confidence', ascending=False).head(MAX_POSITIONS)
-
-    for _, t in day_top.iterrows():
-        position_size = portfolio_val * POSITION_SIZE
-        profit = position_size * t['NetReturn']
-        portfolio_val += profit
-
-    portfolio_history.append({'Date': date, 'Value': portfolio_val})
-
-port_df = pd.DataFrame(portfolio_history)
+port_df, total_return, max_dd = simulate_portfolio(trades_df, prices)
 
 if len(port_df) > 0:
-    total_return = (portfolio_val - STARTING_CAPITAL) / STARTING_CAPITAL * 100
-    peak         = port_df['Value'].max()
-    port_df['Drawdown'] = port_df['Value'] / port_df['Value'].cummax() - 1
-    max_dd       = port_df['Drawdown'].min() * 100
+    portfolio_val = port_df['TotalValue'].iloc[-1]
+    peak = port_df['TotalValue'].max()
 
     print(f"   Starting capital   : ₹{STARTING_CAPITAL:>10,.0f}")
     print(f"   Final value        : ₹{portfolio_val:>10,.0f}")
     print(f"   Total return       : {total_return:>+8.1f}%")
     print(f"   Max drawdown       : {max_dd:>+8.1f}%")
-    print(f"   Test period        : {trades_df['Date'].min().date()} -> {trades_df['Date'].max().date()}")
-
-# ── Save outputs ──────────────────────────────────────────────────────────
-trades_df.to_csv('backtest_trades.csv', index=False)
+    print(f"   Test period        : {port_df['Date'].min().date()} -> {port_df['Date'].max().date()}")
 with open('backtest_analytics_v2.json', 'w', encoding='utf-8') as f:
     json.dump(path_analytics_summary, f, indent=2)
 if len(port_df) > 0:
