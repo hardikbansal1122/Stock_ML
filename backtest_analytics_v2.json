@@ -1,38 +1,38 @@
 {
   "hold_days": 5,
-  "n_trades": 3731,
+  "n_trades": 7496,
   "milestone_hit_rate": {
-    "plus_2pct": 0.6084159742696328,
-    "plus_3pct": 0.5178236397748592,
-    "plus_5pct": 0.3521844009648888
+    "plus_2pct": 0.5835112059765208,
+    "plus_3pct": 0.48319103521878337,
+    "plus_5pct": 0.3223052294557097
   },
   "milestone_hit_count": {
-    "plus_2pct": 2270,
-    "plus_3pct": 1932,
-    "plus_5pct": 1314
+    "plus_2pct": 4374,
+    "plus_3pct": 3622,
+    "plus_5pct": 2416
   },
   "losers_profitable_intraday": {
-    "losing_trades_at_exit": 1712,
-    "green_intraday_red_at_exit": 961,
-    "pct_of_losers": 0.5613317757009346,
-    "pct_of_all_trades": 0.25757169659608686
+    "losing_trades_at_exit": 3413,
+    "green_intraday_red_at_exit": 1785,
+    "pct_of_losers": 0.5230002929973631,
+    "pct_of_all_trades": 0.23812700106723586
   },
   "path_distribution": {
     "max_gain_during_hold": {
-      "mean": 0.045221168302097534,
-      "median": 0.03179349579208357
+      "mean": 0.04134278913202585,
+      "median": 0.02839527608071324
     },
     "max_drawdown_during_hold": {
-      "mean": -0.04540603532354644,
-      "median": -0.03778373457838846
+      "mean": -0.03987770529112054,
+      "median": -0.03327878057609568
     },
     "best_day_return": {
-      "mean": 0.03845555393795655,
-      "median": 0.032768367416946186
+      "mean": 0.03520056850987478,
+      "median": 0.03017284947319085
     },
     "worst_day_return": {
-      "mean": -0.029584396436192185,
-      "median": -0.02682922849817419
+      "mean": -0.02670947600812961,
+      "median": -0.02419742413599925
     }
   }
 }

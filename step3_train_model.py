@@ -32,7 +32,8 @@ FEATURE_COLS = [
     'volume_ratio','volume_trend',
     'bb_position',
     'up_days_5','up_days_10',
-    'gap'
+    'gap',
+    'nifty_ret_5d','nifty_ret_20d','nifty_above_ma50'
 ]
 
 # ── Time-based train/test split ──────────────────────────────────────────

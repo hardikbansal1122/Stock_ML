@@ -152,6 +152,11 @@ for i, f in enumerate(csv_files):
                 how='left'
             )
 
+        # Relative strength vs Nifty
+        if not nifty_features.empty:
+            df_feat['rs_ret_5d']  = df_feat['ret_5d']  - df_feat['nifty_ret_5d']
+            df_feat['rs_ret_20d'] = df_feat['ret_20d'] - df_feat['nifty_ret_20d']
+
         # Drop rows where we don't have enough history
         feature_cols = [c for c in df_feat.columns if c not in
                         ['ticker','target','future_ret_5d','Open','High','Low','Close','Volume']]
