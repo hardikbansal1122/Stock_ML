@@ -53,6 +53,9 @@ def compute_features(df, ticker):
     df['ma5_vs_ma20']  = (df['ma5']  - df['ma20']) / df['ma20']
     df['ma10_vs_ma50'] = (df['ma10'] - df['ma50']) / df['ma50']
 
+    # Momentum acceleration
+    df['momentum_acceleration'] = df['ret_5d'] - df['ret_10d']
+
     # ── RSI (overbought/oversold) ────────────────────────────────
     delta = df['Close'].diff()
     gain  = delta.clip(lower=0).rolling(14).mean()
@@ -96,6 +99,25 @@ def compute_features(df, ticker):
     df['ticker'] = ticker
     return df
 
+# ── Load Nifty index features for market regime signals ───────────────────
+NIFTY_INDEX_FILE = DATA_DIR / 'NIFTY50.csv'
+if NIFTY_INDEX_FILE.exists():
+    nifty_df = pd.read_csv(NIFTY_INDEX_FILE, index_col=0)
+    nifty_df.index = pd.to_datetime(nifty_df.index)
+    nifty_df = nifty_df.sort_index()
+
+    if 'Adj Close' in nifty_df.columns:
+        nifty_df['Close'] = nifty_df['Adj Close']
+
+    nifty_df['nifty_ret_5d']  = nifty_df['Close'].pct_change(5)
+    nifty_df['nifty_ret_20d'] = nifty_df['Close'].pct_change(20)
+    nifty_df['nifty_ma50']    = nifty_df['Close'].rolling(50).mean()
+    nifty_df['nifty_above_ma50'] = (nifty_df['Close'] > nifty_df['nifty_ma50']).astype(int)
+
+    nifty_features = nifty_df[['nifty_ret_5d', 'nifty_ret_20d', 'nifty_above_ma50']].copy()
+else:
+    nifty_features = pd.DataFrame()
+
 # ── Process all stocks ───────────────────────────────────────────────────
 all_features = []
 csv_files    = sorted(DATA_DIR.glob("*.csv"))
@@ -121,6 +143,14 @@ for i, f in enumerate(csv_files):
             continue
 
         df_feat = compute_features(df, ticker)
+
+        if not nifty_features.empty:
+            df_feat = df_feat.merge(
+                nifty_features,
+                left_index=True,
+                right_index=True,
+                how='left'
+            )
 
         # Drop rows where we don't have enough history
         feature_cols = [c for c in df_feat.columns if c not in

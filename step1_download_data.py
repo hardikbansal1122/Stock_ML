@@ -59,6 +59,29 @@ NIFTY_200 = [
 # Remove duplicates and limit to 200
 NIFTY_200 = list(dict.fromkeys(NIFTY_200))[:200]
 
+# ── Nifty index history (Nifty 50) ───────────────────────────────────────
+INDEX_FILE = OUTPUT / 'NIFTY50.csv'
+if not INDEX_FILE.exists():
+    try:
+        idx_df = yf.download(
+            '^NSEI',
+            start='2021-01-01',
+            end=None,
+            progress=False,
+            auto_adjust=True
+        )
+
+        if isinstance(idx_df.columns, pd.MultiIndex):
+            idx_df.columns = idx_df.columns.get_level_values(0)
+
+        if 'Adj Close' in idx_df.columns:
+            idx_df['Close'] = idx_df['Adj Close']
+
+        idx_df.to_csv(INDEX_FILE)
+        print(f"  NIFTY index saved -> {INDEX_FILE.name} ({len(idx_df)} rows)")
+    except Exception as e:
+        print(f"  NIFTY index download failed: {str(e)[:80]}")
+
 print(f"="*60)
 print(f" STEP 1: Downloading {len(NIFTY_200)} NSE stocks")
 print(f"="*60)

@@ -1,0 +1,45 @@
+Phase 3A — Daily Hold Paths Validation Report
+Generated: 2026-05-29T15:09:16
+
+=================================================================
+SUMMARY
+=================================================================
+Trades in backtest_trades.csv     : 3,589
+Paths reconstructed (unique IDs)  : 3,589
+Missing paths                     : 0
+Path rows exported (6 per trade)  : 21,534
+Expected rows if complete         : 3,589 trades × 6 days
+
+=================================================================
+DATA QUALITY CHECKS
+=================================================================
+
+entry_price_vs_day0_close
+  3,589 / 3,589 match (100.00%)
+
+exit_price_vs_day5_close
+  3,589 / 3,589 match (100.00%)
+
+gross_return_vs_day5_cumulative
+  3,589 / 3,589 match (100.00%)
+
+running_max_day5_vs_MaxGainDuringHold
+  3,589 / 3,589 match (100.00%)
+
+min_drawdown_from_peak_vs_MaxDrawdownDuringHold
+  3,589 / 3,589 match (100.00%)
+
+day0_cum_return_is_zero
+  True
+
+duplicate_trade_day_rows
+  0 (expect 0)
+
+status
+  PASS
+
+=================================================================
+OUTPUT FILES
+=================================================================
+  backtest_daily_paths.csv
+  backtest_daily_paths_validation.txt
