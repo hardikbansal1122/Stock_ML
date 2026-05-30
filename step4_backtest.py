@@ -174,6 +174,7 @@ def build_trade_df(signals, prices):
             'Date':        entry_date,
             'Ticker':      ticker,
             'Confidence':  row['xg_proba'],
+            'PredReturn':  row.get('pred_return', np.nan),
             'EntryPrice':  entry_price,
             'ExitPrice':   exit_price,
             'GrossReturn': gross_return,
@@ -202,7 +203,7 @@ def get_position_size(confidence):
     return 0.10
 
 
-def simulate_portfolio(trades_df, prices):
+def simulate_portfolio(trades_df, prices, rank_by_pred_return=False):
     cash = STARTING_CAPITAL
     locked_cash = 0.0
     realized_pnl = 0.0
@@ -212,7 +213,10 @@ def simulate_portfolio(trades_df, prices):
     entry_buckets = {}
     max_exit_date = trades_df['Date'].max()
     for date, day_trades in trades_df.groupby('Date'):
-        entry_buckets[date] = day_trades.sort_values('Confidence', ascending=False).head(MAX_POSITIONS)
+        if rank_by_pred_return and 'PredReturn' in day_trades.columns:
+            entry_buckets[date] = day_trades.sort_values('PredReturn', ascending=False).head(MAX_POSITIONS)
+        else:
+            entry_buckets[date] = day_trades.sort_values('Confidence', ascending=False).head(MAX_POSITIONS)
 
     for date, day_trades in entry_buckets.items():
         day_trades = day_trades.copy()
@@ -371,7 +375,8 @@ for threshold in CONFIDENCE_THRESHOLDS:
     win_rate = trades_df['Won'].mean() * 100
     avg_ret = trades_df['NetReturn'].mean() * 100
 
-    port_df, total_return, max_dd = simulate_portfolio(trades_df, prices)
+    rank_by_pred = abs(threshold - baseline_threshold) < 1e-9
+    port_df, total_return, max_dd = simulate_portfolio(trades_df, prices, rank_by_pred_return=rank_by_pred)
 
     print(f"   Win rate         : {win_rate:.1f}%")
     print(f"   Avg net return   : {avg_ret:+.2f}% per trade")

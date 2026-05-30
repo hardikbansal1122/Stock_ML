@@ -89,9 +89,9 @@ def compute_features(df, ticker):
     # ── Gap (open vs previous close) ────────────────────────────
     df['gap'] = (df['Open'] - df['Close'].shift(1)) / df['Close'].shift(1)
 
-    # ── TARGET: Will stock go up 2%+ in next 5 trading days? ────
-    # This is what we're trying to predict
+    # ── TARGETS: future 5-day return and binary up-2% flag ─────────
     df['future_ret_5d'] = df['Close'].shift(-5) / df['Close'] - 1
+    df['ret_5d_net']    = df['future_ret_5d'] - 0.003
     df['target']        = (df['future_ret_5d'] > 0.02).astype(int)
     # 1 = stock will rise 2%+ in next 5 days
     # 0 = it won't

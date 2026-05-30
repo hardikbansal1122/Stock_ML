@@ -7,7 +7,7 @@ Time-based split — no data leakage.
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from sklearn.metrics import accuracy_score, precision_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 import xgboost as xgb
@@ -104,6 +104,29 @@ xg_prec  = precision_score(y_test, xg_pred_thr, zero_division=0)
 xg_auc   = roc_auc_score(y_test, xg_proba)
 xg_signals = xg_pred_thr.sum()
 
+# ── Model 3: XGBoost regression for 5-day net return ───────────────
+y_train_reg = train['ret_5d_net']
+y_test_reg  = test['ret_5d_net']
+
+xg_reg = xgb.XGBRegressor(
+    n_estimators   = 200,
+    max_depth      = 4,
+    learning_rate  = 0.03,
+    subsample      = 0.8,
+    colsample_bytree = 0.8,
+    objective      = 'reg:squarederror',
+    random_state   = 42,
+    n_jobs         = -1
+)
+xg_reg.fit(X_train, y_train_reg,
+          eval_set=[(X_test, y_test_reg)],
+          verbose=False)
+
+pred_return = xg_reg.predict(X_test)
+
+rmse = np.sqrt(mean_squared_error(y_test_reg, pred_return))
+print(f"\n   Regression RMSE: {rmse:.4f}")
+
 print(f"   Accuracy  : {xg_acc*100:.1f}%  (at 0.5 threshold)")
 print(f"   Precision : {xg_prec*100:.1f}%  (at 0.6 threshold — high confidence only)")
 print(f"   ROC-AUC   : {xg_auc:.3f}")
@@ -145,9 +168,10 @@ pd.DataFrame({'feature': FEATURE_COLS}).to_csv('feature_list.csv', index=False)
 
 # Save test predictions for backtesting
 test_out = test[['Date','ticker','target']].copy()
-test_out['xg_proba'] = xg_proba
-test_out['signal']   = xg_pred_thr
-test_out['close']    = test['Close'] if 'Close' in test.columns else np.nan
+test_out['xg_proba']    = xg_proba
+test_out['signal']      = xg_pred_thr
+test_out['pred_return'] = pred_return
+test_out['close']       = test['Close'] if 'Close' in test.columns else np.nan
 test_out.to_csv('test_predictions.csv', index=False)
 
 print(f"""
