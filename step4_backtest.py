@@ -194,6 +194,14 @@ def get_price_on_date(price_series, date):
     return float(prior.iloc[-1])
 
 
+def get_position_size(confidence):
+    if confidence >= 0.85:
+        return 0.15
+    if confidence >= 0.80:
+        return 0.125
+    return 0.10
+
+
 def simulate_portfolio(trades_df, prices):
     cash = STARTING_CAPITAL
     locked_cash = 0.0
@@ -236,7 +244,11 @@ def simulate_portfolio(trades_df, prices):
                 available_cash = cash
                 if available_cash <= 0:
                     break
-                locked_amount = min(available_cash, (cash + sum(get_price_on_date(prices[pos['Ticker']], today) * pos['Quantity'] for pos in open_positions)) * POSITION_SIZE)
+                position_size = get_position_size(t['Confidence'])
+                locked_amount = min(
+                    available_cash,
+                    (cash + sum(get_price_on_date(prices[pos['Ticker']], today) * pos['Quantity'] for pos in open_positions)) * position_size
+                )
                 if locked_amount <= 0:
                     break
                 quantity = locked_amount / t['EntryPrice']
@@ -322,7 +334,7 @@ print(f"\n Strategy parameters:")
 print(f"   Confidence thresholds: {', '.join([f'{t:.0%}' for t in CONFIDENCE_THRESHOLDS])}")
 print(f"   Hold period          : {HOLD_DAYS} trading days")
 print(f"   Max positions        : {MAX_POSITIONS}")
-print(f"   Position size        : {POSITION_SIZE*100:.0f}% of portfolio")
+print(f"   Position size        : 10% / 12.5% / 15% by confidence bucket")
 print(f"   Transaction cost     : {TOTAL_COST*100:.2f}% per trade (both sides)")
 print(f"   Starting capital     : ₹{STARTING_CAPITAL:,.0f}")
 
