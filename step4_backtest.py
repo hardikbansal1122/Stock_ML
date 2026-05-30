@@ -144,6 +144,71 @@ def build_path_analytics_summary(trades_df, hold_days):
         },
     }
 
+
+def build_trade_df(signals, prices):
+    trades = []
+    for _, row in signals.iterrows():
+        ticker = row['ticker']
+        entry_date = row['Date']
+
+        if ticker not in prices:
+            continue
+
+        stock_prices = prices[ticker]
+        future_dates = stock_prices[stock_prices.index > entry_date]
+        if len(future_dates) < HOLD_DAYS + 1:
+            continue
+
+        hold_prices = future_dates.iloc[0:HOLD_DAYS + 1]
+        entry_price = hold_prices.iloc[0]
+        exit_price = hold_prices.iloc[HOLD_DAYS]
+
+        gross_return = (exit_price - entry_price) / entry_price
+        net_return = gross_return - TOTAL_COST
+
+        path_metrics = compute_hold_path_metrics(hold_prices.values, entry_price, net_return)
+        if path_metrics is None:
+            continue
+
+        trades.append({
+            'Date':        entry_date,
+            'Ticker':      ticker,
+            'Confidence':  row['xg_proba'],
+            'EntryPrice':  entry_price,
+            'ExitPrice':   exit_price,
+            'GrossReturn': gross_return,
+            'NetReturn':   net_return,
+            'Won':         int(net_return > 0),
+            **path_metrics,
+        })
+
+    return pd.DataFrame(trades)
+
+
+def simulate_portfolio(trades_df):
+    portfolio_val = STARTING_CAPITAL
+    portfolio_history = []
+
+    for date, day_trades in trades_df.groupby('Date'):
+        day_top = day_trades.sort_values('Confidence', ascending=False).head(MAX_POSITIONS)
+        for _, t in day_top.iterrows():
+            position_size = portfolio_val * POSITION_SIZE
+            profit = position_size * t['NetReturn']
+            portfolio_val += profit
+        portfolio_history.append({'Date': date, 'Value': portfolio_val})
+
+    port_df = pd.DataFrame(portfolio_history)
+    if len(port_df) > 0:
+        port_df['Drawdown'] = port_df['Value'] / port_df['Value'].cummax() - 1
+        total_return = (portfolio_val - STARTING_CAPITAL) / STARTING_CAPITAL * 100
+        max_dd = port_df['Drawdown'].min() * 100
+    else:
+        total_return = 0.0
+        max_dd = 0.0
+
+    return port_df, total_return, max_dd
+
+
 print("="*65)
 print(" STEP 4: Strategy Backtest")
 print("="*65)
@@ -168,7 +233,7 @@ for f in DATA_DIR.glob("*.csv"):
         pass
 
 # ── Strategy parameters ──────────────────────────────────────────────────
-CONFIDENCE_THRESHOLD = 0.60   # only trade when model is 60%+ confident
+CONFIDENCE_THRESHOLDS = [0.55, 0.60, 0.65, 0.70, 0.75]
 HOLD_DAYS            = 5      # hold for 5 trading days
 MAX_POSITIONS        = 10     # max 10 stocks at once
 POSITION_SIZE        = 0.10   # 10% of portfolio per stock
@@ -179,7 +244,7 @@ TOTAL_COST           = BROKERAGE + SLIPPAGE
 STARTING_CAPITAL     = 100_000  # ₹1,00,000
 
 print(f"\n Strategy parameters:")
-print(f"   Confidence threshold : {CONFIDENCE_THRESHOLD*100:.0f}%")
+print(f"   Confidence thresholds: {', '.join([f'{t:.0%}' for t in CONFIDENCE_THRESHOLDS])}")
 print(f"   Hold period          : {HOLD_DAYS} trading days")
 print(f"   Max positions        : {MAX_POSITIONS}")
 print(f"   Position size        : {POSITION_SIZE*100:.0f}% of portfolio")
@@ -187,59 +252,67 @@ print(f"   Transaction cost     : {TOTAL_COST*100:.2f}% per trade (both sides)")
 print(f"   Starting capital     : ₹{STARTING_CAPITAL:,.0f}")
 
 # ── Simulate trades ───────────────────────────────────────────────────────
-signals = df[df['signal'] == 1].copy()
-signals = signals.sort_values('Date')
+# ── Threshold sweep experiment ────────────────────────────────────────────
+summary_rows = []
+baseline_trades_df = None
+baseline_threshold = 0.60
 
-print(f"\n Total signals generated : {len(signals):,}")
-print(f" Unique stocks           : {signals['ticker'].nunique()}")
+for threshold in CONFIDENCE_THRESHOLDS:
+    print(f"\n Threshold {threshold*100:.0f}%")
+    signals = df[df['xg_proba'] >= threshold].copy()
+    signals = signals.sort_values('Date')
 
-trades = []
+    print(f" Total signals generated : {len(signals):,}")
+    print(f" Unique stocks           : {signals['ticker'].nunique():,}")
 
-for _, row in signals.iterrows():
-    ticker = row['ticker']
-    entry_date = row['Date']
+    trades_df = build_trade_df(signals, prices)
+    print(f" Trades simulated        : {len(trades_df):,}")
 
-    if ticker not in prices:
+    if len(trades_df) == 0:
+        print(" WARNING: No trades simulated for this threshold.")
+        summary_rows.append({
+            'Threshold': threshold,
+            'Signals': len(signals),
+            'Trades': 0,
+            'WinRate': 0.0,
+            'AvgNetReturn': 0.0,
+            'PortfolioReturn': 0.0,
+            'MaxDrawdown': 0.0,
+        })
         continue
 
-    stock_prices = prices[ticker]
+    win_rate = trades_df['Won'].mean() * 100
+    avg_ret = trades_df['NetReturn'].mean() * 100
 
-    # Find entry price (next day open approximated by close)
-    future_dates = stock_prices[stock_prices.index > entry_date]
-    if len(future_dates) < HOLD_DAYS + 1:
-        continue
+    port_df, total_return, max_dd = simulate_portfolio(trades_df)
 
-    hold_prices = future_dates.iloc[0:HOLD_DAYS + 1]
-    entry_price = hold_prices.iloc[0]
-    exit_price  = hold_prices.iloc[HOLD_DAYS]
+    print(f"   Win rate         : {win_rate:.1f}%")
+    print(f"   Avg net return   : {avg_ret:+.2f}% per trade")
+    print(f"   Portfolio return : {total_return:+.1f}%")
+    print(f"   Max drawdown     : {max_dd:+.1f}%")
 
-    # Calculate return
-    gross_return = (exit_price - entry_price) / entry_price
-    net_return   = gross_return - TOTAL_COST  # subtract transaction costs
-
-    path_metrics = compute_hold_path_metrics(hold_prices.values, entry_price, net_return)
-    if path_metrics is None:
-        continue
-
-    trades.append({
-        'Date':        entry_date,
-        'Ticker':      ticker,
-        'Confidence':  row['xg_proba'],
-        'EntryPrice':  entry_price,
-        'ExitPrice':   exit_price,
-        'GrossReturn': gross_return,
-        'NetReturn':   net_return,
-        'Won':         int(net_return > 0),
-        **path_metrics,
+    summary_rows.append({
+        'Threshold': threshold,
+        'Signals': len(signals),
+        'Trades': len(trades_df),
+        'WinRate': win_rate,
+        'AvgNetReturn': avg_ret,
+        'PortfolioReturn': total_return,
+        'MaxDrawdown': max_dd,
     })
 
-trades_df = pd.DataFrame(trades)
-print(f" Trades simulated        : {len(trades_df):,}")
+    if abs(threshold - baseline_threshold) < 1e-9:
+        baseline_trades_df = trades_df
 
-if len(trades_df) == 0:
-    print("ERROR: No trades simulated. Check that data files are present.")
+if baseline_trades_df is None:
+    print("ERROR: No baseline trades simulated for 60% threshold.")
     exit()
 
+trades_df = baseline_trades_df
+
+summary_df = pd.DataFrame(summary_rows)
+summary_df.to_csv('threshold_sweep_summary.csv', index=False)
+print(f"\nThreshold sweep summary saved -> threshold_sweep_summary.csv")
 # ── Performance metrics ───────────────────────────────────────────────────
 print(f"\n{'='*65}")
 print(f" PERFORMANCE METRICS")
