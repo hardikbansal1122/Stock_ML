@@ -330,7 +330,7 @@ print(f"   Starting capital     : ₹{STARTING_CAPITAL:,.0f}")
 # ── Threshold sweep experiment ────────────────────────────────────────────
 summary_rows = []
 baseline_trades_df = None
-baseline_threshold = 0.60
+baseline_threshold = 0.75
 
 for threshold in CONFIDENCE_THRESHOLDS:
     print(f"\n Threshold {threshold*100:.0f}%")
@@ -380,7 +380,7 @@ for threshold in CONFIDENCE_THRESHOLDS:
         baseline_trades_df = trades_df
 
 if baseline_trades_df is None:
-    print("ERROR: No baseline trades simulated for 60% threshold.")
+    print("ERROR: No baseline trades simulated for 75% threshold.")
     exit()
 
 trades_df = baseline_trades_df
