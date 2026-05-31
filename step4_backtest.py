@@ -455,7 +455,7 @@ path_analytics_summary = print_path_analytics_v2(trades_df, HOLD_DAYS)
 # ── Portfolio simulation ──────────────────────────────────────────────────
 print(f"\n Portfolio Simulation (₹{STARTING_CAPITAL:,.0f} starting capital):")
 
-port_df, total_return, max_dd = simulate_portfolio(trades_df, prices)
+port_df, total_return, max_dd = simulate_portfolio(trades_df, prices, rank_by_pred_return=True)
 
 if len(port_df) > 0:
     portfolio_val = port_df['TotalValue'].iloc[-1]
@@ -466,6 +466,9 @@ if len(port_df) > 0:
     print(f"   Total return       : {total_return:>+8.1f}%")
     print(f"   Max drawdown       : {max_dd:>+8.1f}%")
     print(f"   Test period        : {port_df['Date'].min().date()} -> {port_df['Date'].max().date()}")
+
+# Persist the final trades table so the script output matches the claimed saved file.
+trades_df.to_csv('backtest_trades.csv', index=False)
 with open('backtest_analytics_v2.json', 'w', encoding='utf-8') as f:
     json.dump(path_analytics_summary, f, indent=2)
 if len(port_df) > 0:
