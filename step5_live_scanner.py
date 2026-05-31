@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone, date
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -59,6 +59,69 @@ NIFTY_200 = [
 ]
 NIFTY_200 = list(dict.fromkeys(NIFTY_200))
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+NSE_HOLIDAYS = {
+    date(2024, 1, 1): "New Year's Day",
+    date(2024, 1, 26): "Republic Day",
+    date(2024, 3, 25): "Holi",
+    date(2024, 3, 29): "Good Friday",
+    date(2024, 4, 14): "Dr. Babasaheb Ambedkar Jayanti",
+    date(2024, 4, 21): "Mahavir Jayanti",
+    date(2024, 8, 15): "Independence Day",
+    date(2024, 9, 7): "Ganesh Chaturthi",
+    date(2024, 10, 2): "Gandhi Jayanti",
+    date(2024, 11, 1): "Diwali",
+    date(2024, 11, 15): "Guru Nanak Jayanti",
+    date(2024, 12, 25): "Christmas Day",
+    date(2025, 1, 1): "New Year's Day",
+    date(2025, 1, 26): "Republic Day",
+    date(2025, 3, 14): "Holi",
+    date(2025, 4, 18): "Good Friday",
+    date(2025, 4, 14): "Dr. Babasaheb Ambedkar Jayanti",
+    date(2025, 4, 12): "Mahavir Jayanti",
+    date(2025, 8, 15): "Independence Day",
+    date(2025, 9, 26): "Ganesh Chaturthi",
+    date(2025, 10, 2): "Gandhi Jayanti",
+    date(2025, 11, 1): "Diwali",
+    date(2025, 11, 5): "Guru Nanak Jayanti",
+    date(2025, 12, 25): "Christmas Day",
+    date(2026, 1, 1): "New Year's Day",
+    date(2026, 1, 26): "Republic Day",
+    date(2026, 3, 2): "Holi",
+    date(2026, 4, 3): "Good Friday",
+    date(2026, 4, 1): "Mahavir Jayanti",
+    date(2026, 4, 14): "Dr. Babasaheb Ambedkar Jayanti",
+    date(2026, 8, 15): "Independence Day",
+    date(2026, 9, 16): "Ganesh Chaturthi",
+    date(2026, 10, 2): "Gandhi Jayanti",
+    date(2026, 11, 14): "Diwali",
+    date(2026, 11, 30): "Guru Nanak Jayanti",
+    date(2026, 12, 25): "Christmas Day",
+}
+
+def get_today_ist():
+    return datetime.now(IST).date()
+
+
+def is_nse_trading_holiday(check_date):
+    return check_date in NSE_HOLIDAYS
+
+
+def check_market_open():
+    today = get_today_ist()
+    if today.weekday() == 5:
+        print(f"\nNSE is closed today ({today:%A, %d %b %Y}). Reason: Saturday.")
+        return False
+    if today.weekday() == 6:
+        print(f"\nNSE is closed today ({today:%A, %d %b %Y}). Reason: Sunday.")
+        return False
+    if is_nse_trading_holiday(today):
+        holiday = NSE_HOLIDAYS[today]
+        print(f"\nNSE is closed today ({today:%A, %d %b %Y}). Reason: {holiday}.")
+        return False
+    return True
+
 # ── Feature engineering function ─────────────────────────────────────────
 def compute_features_single(df):
     df = df.copy()
@@ -97,6 +160,10 @@ def compute_features_single(df):
     return df
 
 # ── Scan all stocks ───────────────────────────────────────────────────────
+if not check_market_open():
+    print("\nNo signals generated because NSE is closed today.")
+    exit()
+
 print(f"\nScanning {len(NIFTY_200)} stocks...\n")
 
 signals = []
