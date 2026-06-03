@@ -1,21 +1,19 @@
-Champion Strategy
-
 Branch:
-realistic-portfolio-sim-v1
-
-Features:
-- Market regime features
-- Confidence sizing
-- Realistic portfolio simulator
-
-Threshold:
-75%
+volume-research-v1
 
 Performance:
-Return      : +21.9%
-Drawdown    : -11.0%
+Return      : +29.4%
+Drawdown    : -10.8%
 Win Rate    : 61.1%
-Trades      : 265
+Trades      : 288
 
-Date:
-<today>
+Prediction Success Rate:
+69.1%
+
+Features:
+- Relative Volume
+- Up/Down Volume Ratio
+- Relative Strength
+- Market Regime Features
+- Confidence Sizing
+- Regression Ranking

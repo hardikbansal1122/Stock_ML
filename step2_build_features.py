@@ -75,9 +75,15 @@ def compute_features(df, ticker):
     df['vol_ma20']      = df['Volume'].rolling(20).mean()
     df['volume_ratio']  = df['Volume'] / df['vol_ma20']   # spike = >1.5
     df['volume_trend']  = df['Volume'].rolling(5).mean() / df['vol_ma20']
-    
+
     # Relative volume (safe division by zero)
     df['relative_volume'] = np.where(df['vol_ma20'] > 0, df['Volume'] / df['vol_ma20'], np.nan)
+
+    up_vol = df['Volume'].where(df['Close'] > df['Close'].shift(1), 0)
+    down_vol = df['Volume'].where(df['Close'] < df['Close'].shift(1), 0)
+    up_vol_10 = up_vol.rolling(10).sum()
+    down_vol_10 = down_vol.rolling(10).sum()
+    df['updown_vol_ratio_10'] = np.where(down_vol_10 > 0, up_vol_10 / down_vol_10, np.nan)
 
     # ── Bollinger Band position ──────────────────────────────────
     bb_mid = df['Close'].rolling(20).mean()
@@ -174,6 +180,8 @@ for i, f in enumerate(csv_files):
 
     except Exception as e:
         print(f"  ERROR {ticker}: {e}")
+
+print('Added updown_vol_ratio_10')
 
 # ── Combine and save ─────────────────────────────────────────────────────
 full = pd.concat(all_features, ignore_index=False)
