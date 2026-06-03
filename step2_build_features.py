@@ -75,6 +75,9 @@ def compute_features(df, ticker):
     df['vol_ma20']      = df['Volume'].rolling(20).mean()
     df['volume_ratio']  = df['Volume'] / df['vol_ma20']   # spike = >1.5
     df['volume_trend']  = df['Volume'].rolling(5).mean() / df['vol_ma20']
+    
+    # Relative volume (safe division by zero)
+    df['relative_volume'] = np.where(df['vol_ma20'] > 0, df['Volume'] / df['vol_ma20'], np.nan)
 
     # ── Bollinger Band position ──────────────────────────────────
     bb_mid = df['Close'].rolling(20).mean()
@@ -100,7 +103,8 @@ def compute_features(df, ticker):
     return df
 
 # ── Load Nifty index features for market regime signals ───────────────────
-NIFTY_INDEX_FILE = DATA_DIR / 'NIFTY50.csv'
+BENCHMARK_DIR = Path('benchmark')
+NIFTY_INDEX_FILE = BENCHMARK_DIR / 'NIFTY50.csv'
 if NIFTY_INDEX_FILE.exists():
     nifty_df = pd.read_csv(NIFTY_INDEX_FILE, index_col=0)
     nifty_df.index = pd.to_datetime(nifty_df.index)
@@ -115,8 +119,11 @@ if NIFTY_INDEX_FILE.exists():
     nifty_df['nifty_above_ma50'] = (nifty_df['Close'] > nifty_df['nifty_ma50']).astype(int)
 
     nifty_features = nifty_df[['nifty_ret_5d', 'nifty_ret_20d', 'nifty_above_ma50']].copy()
+    print('Added Relative Strength Features')
 else:
     nifty_features = pd.DataFrame()
+
+print('Added RelativeVolume feature')
 
 # ── Process all stocks ───────────────────────────────────────────────────
 all_features = []
@@ -128,7 +135,6 @@ for i, f in enumerate(csv_files):
     ticker = f.stem
     try:
         df = pd.read_csv(f, index_col=0)
-
         # Handle column naming
         df.columns = [c.strip() for c in df.columns]
         if 'Adj Close' in df.columns:

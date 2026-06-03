@@ -93,6 +93,60 @@ def print_path_analytics_v2(trades_df, hold_days):
     return build_path_analytics_summary(trades_df, hold_days)
 
 
+def categorize_trade(row):
+    """Categorize trades as Winner, Prediction Success, or Failed Prediction."""
+    if row['NetReturn'] > 0:
+        return 'Winner'
+    elif row['HitPlus2Pct'] == 1:
+        return 'Prediction Success, Financial Loss'
+    else:
+        return 'Failed Prediction'
+
+
+def print_prediction_quality_analysis(trades_df):
+    """Analyze and print prediction quality metrics."""
+    n = int(len(trades_df))
+    n_winners = int((trades_df['NetReturn'] > 0).sum())
+    n_pred_success = int((trades_df['HitPlus2Pct'] == 1).sum())
+    n_pred_and_winner = int(((trades_df['NetReturn'] > 0) & (trades_df['HitPlus2Pct'] == 1)).sum())
+    n_pred_loss = int(((trades_df['NetReturn'] < 0) & (trades_df['HitPlus2Pct'] == 1)).sum())
+    n_pred_failed = int(((trades_df['NetReturn'] < 0) & (trades_df['HitPlus2Pct'] == 0)).sum())
+    
+    pred_success_rate = n_pred_success / n * 100 if n > 0 else 0.0
+    financial_win_rate = n_winners / n * 100 if n > 0 else 0.0
+    avg_max_gain = trades_df['MaxGainDuringHold'].mean() * 100
+    median_max_gain = trades_df['MaxGainDuringHold'].median() * 100
+    
+    print(f"\n{'='*65}")
+    print(" PREDICTION QUALITY ANALYSIS")
+    print(f"{'='*65}")
+    
+    print(f"\n Total trades                          : {n:,}")
+    print(f" Financial winners                    : {n_winners:,} ({financial_win_rate:.1f}%)")
+    print(f" Prediction successes (+2% touched)   : {n_pred_success:,} ({pred_success_rate:.1f}%)")
+    print(f" Prediction success + financial win   : {n_pred_and_winner:,}")
+    print(f" Prediction success + financial loss  : {n_pred_loss:,}")
+    print(f" Failed predictions                   : {n_pred_failed:,}")
+    
+    print(f"\n Prediction success rate              : {pred_success_rate:.1f}%")
+    print(f" Financial win rate                   : {financial_win_rate:.1f}%")
+    print(f" Average MaxGainDuringHold            : {avg_max_gain:+.2f}%")
+    print(f" Median MaxGainDuringHold             : {median_max_gain:+.2f}%")
+    
+    return {
+        'total_trades': n,
+        'financial_winners': n_winners,
+        'financial_win_rate': financial_win_rate,
+        'prediction_successes': n_pred_success,
+        'prediction_success_rate': pred_success_rate,
+        'pred_success_and_winner': n_pred_and_winner,
+        'pred_success_and_loss': n_pred_loss,
+        'failed_predictions': n_pred_failed,
+        'avg_max_gain_during_hold': avg_max_gain,
+        'median_max_gain_during_hold': median_max_gain,
+    }
+
+
 def build_path_analytics_summary(trades_df, hold_days):
     n = int(len(trades_df))
     losers = trades_df[trades_df['NetReturn'] < 0]
@@ -300,6 +354,28 @@ def simulate_portfolio(trades_df, prices, rank_by_pred_return=False):
     return port_df, total_return, max_dd
 
 
+def apply_takeprofit_3pct(trades_df):
+    """
+    Apply +3% take-profit exit rule to trades.
+    For trades that hit +3% during hold, exit at +3% gain.
+    Otherwise, use original exit price (day 5).
+    """
+    modified = trades_df.copy()
+    
+    # Identify trades that hit +3% during hold
+    hit_3pct_mask = modified['HitPlus3Pct'] == 1
+    
+    # For those trades, set exit price to entry_price * 1.03 (+3% exactly)
+    modified.loc[hit_3pct_mask, 'ExitPrice'] = modified.loc[hit_3pct_mask, 'EntryPrice'] * 1.03
+    
+    # Recalculate gross and net returns for take-profit trades
+    modified.loc[hit_3pct_mask, 'GrossReturn'] = 0.03
+    modified.loc[hit_3pct_mask, 'NetReturn'] = 0.03 - TOTAL_COST
+    modified.loc[hit_3pct_mask, 'Won'] = (modified.loc[hit_3pct_mask, 'NetReturn'] > 0).astype(int)
+    
+    return modified
+
+
 print("="*65)
 print(" STEP 4: Strategy Backtest")
 print("="*65)
@@ -402,6 +478,10 @@ if baseline_trades_df is None:
 
 trades_df = baseline_trades_df
 
+# Add prediction-quality analytics columns
+trades_df['PredictionSuccess'] = (trades_df['HitPlus2Pct'] == 1).astype(int)
+trades_df['TradeCategory'] = trades_df.apply(categorize_trade, axis=1)
+
 summary_df = pd.DataFrame(summary_rows)
 summary_df.to_csv('threshold_sweep_summary.csv', index=False)
 print(f"\nThreshold sweep summary saved -> threshold_sweep_summary.csv")
@@ -452,6 +532,8 @@ for _, r in monthly.tail(6).iterrows():
 
 path_analytics_summary = print_path_analytics_v2(trades_df, HOLD_DAYS)
 
+pred_quality_summary = print_prediction_quality_analysis(trades_df)
+
 # ── Portfolio simulation ──────────────────────────────────────────────────
 print(f"\n Portfolio Simulation (₹{STARTING_CAPITAL:,.0f} starting capital):")
 
@@ -473,6 +555,60 @@ with open('backtest_analytics_v2.json', 'w', encoding='utf-8') as f:
     json.dump(path_analytics_summary, f, indent=2)
 if len(port_df) > 0:
     port_df.to_csv('portfolio_history.csv', index=False)
+
+# ── EXIT RULE COMPARISON: Champion vs. Take-Profit +3% ────────────────────
+print(f"\n{'='*65}")
+print(" EXIT RULE COMPARISON")
+print(f"{'='*65}")
+
+# Champion metrics (current simulation)
+champion_return = total_return
+champion_dd = max_dd
+champion_wr = trades_df['Won'].mean() * 100
+
+# Experimental: apply +3% take-profit rule
+trades_tp3 = apply_takeprofit_3pct(trades_df)
+port_tp3, tp3_return, tp3_dd = simulate_portfolio(trades_tp3, prices, rank_by_pred_return=True)
+tp3_wr = trades_tp3['Won'].mean() * 100
+
+# Print comparison
+print(f"\n CHAMPION (5-day hold):")
+print(f"   Portfolio return   : {champion_return:>+8.1f}%")
+print(f"   Max drawdown       : {champion_dd:>+8.1f}%")
+print(f"   Win rate           : {champion_wr:>7.1f}%")
+
+print(f"\n TAKE-PROFIT +3% EXIT:")
+print(f"   Portfolio return   : {tp3_return:>+8.1f}%")
+print(f"   Max drawdown       : {tp3_dd:>+8.1f}%")
+print(f"   Win rate           : {tp3_wr:>7.1f}%")
+
+print(f"\n DIFFERENCE (TP3 - Champion):")
+diff_return = tp3_return - champion_return
+diff_dd = tp3_dd - champion_dd
+diff_wr = tp3_wr - champion_wr
+print(f"   Portfolio return   : {diff_return:>+8.1f}% (abs: {abs(diff_return):.1f}%)")
+print(f"   Max drawdown       : {diff_dd:>+8.1f}%")
+print(f"   Win rate           : {diff_wr:>+7.1f}%")
+
+# Save comparison to CSV
+exit_rule_comparison = pd.DataFrame([
+    {
+        'Strategy': 'Champion (5-day hold)',
+        'Portfolio_Return_%': champion_return,
+        'Max_Drawdown_%': champion_dd,
+        'Win_Rate_%': champion_wr,
+        'Total_Trades': len(trades_df),
+    },
+    {
+        'Strategy': 'Take-Profit +3%',
+        'Portfolio_Return_%': tp3_return,
+        'Max_Drawdown_%': tp3_dd,
+        'Win_Rate_%': tp3_wr,
+        'Total_Trades': len(trades_tp3),
+    },
+])
+exit_rule_comparison.to_csv('exit_rule_comparison.csv', index=False)
+print(f"\n Exit rule comparison saved → exit_rule_comparison.csv")
 
 # ── Plot equity curve ─────────────────────────────────────────────────────
 if len(port_df) > 5:
