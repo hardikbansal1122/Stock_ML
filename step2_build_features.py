@@ -85,6 +85,11 @@ def compute_features(df, ticker):
     down_vol_10 = down_vol.rolling(10).sum()
     df['updown_vol_ratio_10'] = np.where(down_vol_10 > 0, up_vol_10 / down_vol_10, np.nan)
 
+    # Volume persistence: % of last 10 days with above-average volume
+    vol_ma20 = df['Volume'].rolling(20).mean()
+    rvol_daily = df['Volume'] / vol_ma20
+    df['vol_persistence_10'] = (rvol_daily > 1.0).rolling(10).mean()
+
     # ── Bollinger Band position ──────────────────────────────────
     bb_mid = df['Close'].rolling(20).mean()
     bb_std = df['Close'].rolling(20).std()
@@ -182,6 +187,7 @@ for i, f in enumerate(csv_files):
         print(f"  ERROR {ticker}: {e}")
 
 print('Added updown_vol_ratio_10')
+print('Added vol_persistence_10')
 
 # ── Combine and save ─────────────────────────────────────────────────────
 full = pd.concat(all_features, ignore_index=False)

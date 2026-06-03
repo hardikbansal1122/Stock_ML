@@ -38,7 +38,7 @@ FEATURE_COLS = [
     'ma5_vs_ma20', 'ma10_vs_ma50',
     'rsi_normalized',
     'volatility_5d', 'volatility_20d', 'hl_range',
-    'volume_ratio', 'volume_trend', 'relative_volume', 'updown_vol_ratio_10',
+    'volume_ratio', 'volume_trend', 'relative_volume', 'updown_vol_ratio_10', 'vol_persistence_10',
     'bb_position',
     'up_days_5', 'up_days_10',
     'gap',
