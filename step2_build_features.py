@@ -186,6 +186,46 @@ print('Added updown_vol_ratio_10')
 # ── Combine and save ─────────────────────────────────────────────────────
 full = pd.concat(all_features, ignore_index=False)
 full = full.reset_index().rename(columns={'index':'Date'})
+
+# ── Add cross-sectional momentum rank feature ────────────────────────────
+# For each date, rank all stocks by their 20-day return and convert to percentile
+print("\nAdding cross-sectional momentum rank (cs_rank_20d)...")
+
+cs_rank_list = []
+
+for date in full['Date'].unique():
+    date_data = full[full['Date'] == date].copy()
+    valid = date_data.dropna(subset=['ret_20d'])
+    
+    if len(valid) > 1:
+        # Rank by ret_20d (higher = better)
+        ranks = valid['ret_20d'].rank(method='average')
+        # Convert to percentile: 0 to 1 range
+        percentile = (ranks - 1) / (len(ranks) - 1)
+        
+        cs_rank_result = pd.DataFrame({
+            'Date': date,
+            'ticker': valid['ticker'].values,
+            'cs_rank_20d': percentile.values
+        })
+        cs_rank_list.append(cs_rank_result)
+    elif len(valid) == 1:
+        # Single stock on date = rank 0.5
+        cs_rank_result = pd.DataFrame({
+            'Date': [date],
+            'ticker': valid['ticker'].values,
+            'cs_rank_20d': [0.5]
+        })
+        cs_rank_list.append(cs_rank_result)
+
+if cs_rank_list:
+    cs_rank_df = pd.concat(cs_rank_list, ignore_index=True)
+    full = full.merge(cs_rank_df, on=['Date', 'ticker'], how='left')
+    print(f"  Added cs_rank_20d feature")
+    print(f"  Non-null values: {full['cs_rank_20d'].notna().sum()} / {len(full)} ({full['cs_rank_20d'].notna().sum()/len(full)*100:.1f}%)")
+else:
+    print("  WARNING: Could not compute cs_rank_20d")
+
 full.to_csv(OUT_FILE, index=False)
 
 feature_cols = [c for c in full.columns if c not in

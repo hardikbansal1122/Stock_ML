@@ -34,7 +34,8 @@ FEATURE_COLS = [
     'up_days_5','up_days_10',
     'gap',
     'nifty_ret_5d','nifty_ret_20d','nifty_above_ma50',
-    'rs_ret_5d','rs_ret_20d'
+    'rs_ret_5d','rs_ret_20d',
+    'cs_rank_20d'  # ← Cross-sectional momentum rank
 ]
 
 print("Relative Strength features enabled:\nrs_ret_5d\nrs_ret_20d")
