@@ -9,6 +9,8 @@ Open: http://localhost:5000
 """
 
 from flask import Flask, jsonify, send_from_directory, request
+
+from auth_middleware import require_auth, require_admin, supabase, ADMIN_EMAILS
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -306,7 +308,39 @@ def run_scanner(threshold=0.60):
 @app.route('/')
 def index(): return send_from_directory('static', 'index.html')
 
+@app.route('/dashboard')
+def dashboard(): return send_from_directory('static', 'dashboard.html')
+
+@app.route('/api/sync_user', methods=['POST'])
+@require_auth
+def api_sync_user():
+    if not supabase:
+        return jsonify({"status": "skipped", "reason": "Supabase not configured"})
+        
+    user = request.user
+    uid = user.get('uid')
+    email = user.get('email')
+    display_name = user.get('name', '')
+    photo_url = user.get('picture', '')
+    
+    try:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+        # Upsert user data
+        supabase.table('users').upsert({
+            'uid': uid,
+            'email': email,
+            'display_name': display_name,
+            'photo_url': photo_url,
+            'last_login': now
+        }).execute()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/api/scan')
+@require_admin
 def api_scan():
     threshold = float(request.args.get('threshold', 0.60))
     result = run_scanner(threshold=threshold)
@@ -317,16 +351,19 @@ def api_scan():
     return jsonify(result)
 
 @app.route('/api/last_scan')
+@require_auth
 def api_last_scan():
     data = load_last_scan()
     return jsonify(data) if data else jsonify({'signals':[],'processed':0,'total':len(NIFTY_TICKERS)})
 
 @app.route('/api/resolve')
+@require_admin
 def api_resolve():
     resolved = auto_resolve_trades()
     return jsonify({'resolved_count':len(resolved),'resolved':resolved})
 
 @app.route('/api/history')
+@require_auth
 def api_history():
     if not EXCEL_PATH.exists(): return jsonify({'history':[]})
     try:
@@ -336,6 +373,7 @@ def api_history():
         return jsonify({'history':[],'error':str(e)})
 
 @app.route('/api/performance')
+@require_auth
 def api_performance():
     if not EXCEL_PATH.exists(): return jsonify({})
     try:
@@ -344,6 +382,7 @@ def api_performance():
     except: return jsonify({})
 
 @app.route('/api/open_excel')
+@require_admin
 def api_open_excel():
     init_excel()
     try:
@@ -355,13 +394,30 @@ def api_open_excel():
         return jsonify({'success':False,'error':str(e)})
 
 @app.route('/api/status')
+@require_auth
 def api_status():
     last = load_last_scan()
+    user = request.user
+    uid = user.get('uid')
+    email = user.get('email')
+    
+    is_admin = False
+    if email in ADMIN_EMAILS:
+        is_admin = True
+    elif supabase:
+        try:
+            res = supabase.table('users').select('role').eq('uid', uid).execute()
+            if res.data and len(res.data) > 0 and res.data[0].get('role') == 'admin':
+                is_admin = True
+        except:
+            pass
+            
     return jsonify({'model_loaded':MODEL is not None,
                     'total_tickers':len(NIFTY_TICKERS),
                     'excel_exists':EXCEL_PATH.exists(),
                     'last_scan_time':last.get('timestamp') if last else None,
-                    'last_signals':len(last.get('signals',[])) if last else 0})
+                    'last_signals':len(last.get('signals',[])) if last else 0,
+                    'is_admin': is_admin})
 
 if __name__ == '__main__':
     init_excel()
