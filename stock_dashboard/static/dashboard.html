@@ -4,71 +4,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quant.ML — Stock Signal Engine</title>
+  <title>Signal Desk — Research Terminal</title>
+  <meta name="description" content="Signal Desk: Systematic NSE stock research powered by machine learning.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&display=swap"
     rel="stylesheet">
   <style>
-    /* ── Design Tokens ─────────────────────────────────────────────────────── */
+    /* ── Tokens ──────────────────────────────────────────────────────────────── */
     :root {
-      --bg: #fdf8f8;
-      --surface: #ffffff;
-      --surface-low: #f7f3f2;
-      --surface-mid: #f1edec;
-      --surface-hi: #ebe7e6;
-      --surface-max: #e5e2e1;
-      --border: rgba(0, 0, 0, 0.06);
-      --border-md: rgba(0, 0, 0, 0.10);
-      --border-dark: rgba(0, 0, 0, 0.16);
-      --txt: #1c1b1b;
-      --txt2: #444748;
-      --txt3: #868382;
-      --primary: #000000;
-      --on-primary: #ffffff;
-      --green: #3d683d;
-      --green-bg: #bbecb5;
-      --green-tint: rgba(61, 104, 61, 0.08);
-      --red: #ba1a1a;
-      --red-bg: #ffdad6;
-      --red-tint: rgba(186, 26, 26, 0.08);
-      --amber: #b45309;
-      --amber-bg: #fef3c7;
-      --outline: #747878;
-      --outline-var: #c4c7c7;
+      --bg: #F3F1EC;
+      --surface: #FFFFFF;
+      --surface-low: #EAE8E3;
+      --surface-mid: #DEDAD4;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-md: rgba(0, 0, 0, 0.14);
+      --border-dark: rgba(0, 0, 0, 0.24);
+      --txt: #111111;
+      --txt2: #4A4845;
+      --txt3: #888480;
+      --accent: #0F766E;
+      --accent-light: rgba(15, 118, 110, 0.10);
+      --accent-mid: rgba(15, 118, 110, 0.20);
+      --green: #0F766E;
+      --green-bg: rgba(15, 118, 110, 0.10);
+      --red: #B91C1C;
+      --red-bg: rgba(185, 28, 28, 0.10);
+      --amber: #92400E;
+      --amber-bg: rgba(146, 64, 14, 0.10);
+      --sidebar-w: 220px;
     }
 
-    /* ── Dark Mode Overrides ────────────────────────────────────────────────── */
     body.dark {
-      --bg: #0d0d0d;
-      --surface: #161616;
-      --surface-low: #111111;
-      --surface-mid: #1c1c1c;
-      --surface-hi: #222222;
-      --surface-max: #2c2c2c;
-      --border: rgba(255, 255, 255, 0.06);
-      --border-md: rgba(255, 255, 255, 0.10);
-      --border-dark: rgba(255, 255, 255, 0.18);
-      --txt: #f0eeee;
-      --txt2: #9a9898;
-      --txt3: #5e5c5c;
-      --primary: #f0eeee;
-      --on-primary: #0d0d0d;
-      --green: #4ade80;
-      --green-bg: rgba(74, 222, 128, 0.14);
-      --green-tint: rgba(74, 222, 128, 0.08);
-      --red: #f87171;
-      --red-bg: rgba(248, 113, 113, 0.14);
-      --red-tint: rgba(248, 113, 113, 0.08);
-      --amber: #fbbf24;
-      --amber-bg: rgba(251, 191, 36, 0.10);
-      --outline: #666666;
-      --outline-var: #383838;
+      --bg: #0E0E0D;
+      --surface: #181816;
+      --surface-low: #121210;
+      --surface-mid: #1E1D1A;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-md: rgba(255, 255, 255, 0.12);
+      --border-dark: rgba(255, 255, 255, 0.22);
+      --txt: #F0EDEA;
+      --txt2: #9A9590;
+      --txt3: #5A5652;
+      --accent: #14B8A6;
+      --accent-light: rgba(20, 184, 166, 0.12);
+      --accent-mid: rgba(20, 184, 166, 0.22);
+      --green: #14B8A6;
+      --green-bg: rgba(20, 184, 166, 0.12);
+      --red: #F87171;
+      --red-bg: rgba(248, 113, 113, 0.12);
+      --amber: #FCD34D;
+      --amber-bg: rgba(252, 211, 77, 0.10);
     }
 
-    /* ── Reset ─────────────────────────────────────────────────────────────── */
+    /* ── Reset ───────────────────────────────────────────────────────────────── */
     *,
     *::before,
     *::after {
@@ -80,93 +69,229 @@
     html,
     body {
       height: 100%;
+      overflow: hidden;
     }
 
-    /* ── Base ──────────────────────────────────────────────────────────────── */
     body {
       background: var(--bg);
       color: var(--txt);
-      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
-      transition: background-color 0.2s, color 0.2s;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 15px;
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      transition: background .2s, color .2s;
     }
 
-    /* ── Material Icons ─────────────────────────────────────────────────────── */
-    .material-symbols-outlined {
-      font-family: 'Material Symbols Outlined';
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
-      font-size: 18px;
-      line-height: 1;
-      vertical-align: middle;
-      user-select: none;
-    }
-
-    /* ── Top Navigation ─────────────────────────────────────────────────────── */
-    .topnav {
+    /* ── Sidebar ─────────────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--txt);
+      color: var(--bg);
+      overflow: hidden;
       position: sticky;
       top: 0;
-      z-index: 100;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
     }
 
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 32px;
+    body.dark .sidebar {
+      background: #141414;
+      border-right: 1px solid var(--border-dark);
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.4);
+      color: #F3F1EC;
     }
 
-    .brand-wordmark {
-      font-family: 'Playfair Display', serif;
-      font-size: 26px;
-      font-weight: 700;
-      font-style: italic;
-      color: var(--primary);
-      letter-spacing: -0.5px;
+    .sidebar-brand {
+      padding: 28px 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.06em;
+      color: #fff;
       line-height: 1;
+      margin-bottom: 3px;
     }
 
-    .nav-links {
-      display: flex;
-      gap: 2px;
-    }
-
-    .nav-link {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+    .brand-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.40);
       text-transform: uppercase;
-      color: var(--txt2);
-      text-decoration: none;
-      padding: 6px 10px;
-      transition: color 0.15s, background 0.15s;
+      letter-spacing: 0.12em;
     }
 
-    .nav-link:hover {
-      color: var(--primary);
-      background: var(--surface-low);
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 0;
+      overflow-y: auto;
     }
 
-    .nav-right {
+    .nav-section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.30);
+      padding: 0 20px 8px;
+      margin-top: 4px;
+    }
+
+    .nav-item {
       display: flex;
       align-items: center;
       gap: 10px;
+      padding: 10px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      border-left: 2px solid transparent;
+      transition: color .15s, background .15s, border-color .15s;
+      text-transform: uppercase;
+    }
+
+    .nav-item:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-item.active {
+      color: #fff;
+      border-left-color: var(--accent);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-item .nav-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .nav-item.active .nav-icon {
+      opacity: 1;
+    }
+
+    .nav-divider {
+      margin: 12px 20px;
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .sidebar-footer {
+      padding: 16px 16px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.10);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-run {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      width: 100%;
+      transition: background .15s, transform .12s;
+    }
+
+    .btn-run:hover {
+      background: #0a5d57;
+      transform: translateY(-1px);
+    }
+
+    .btn-run:disabled {
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.35);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      cursor: pointer;
+      width: 100%;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+
+    .btn-logout:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* ── Main Area ───────────────────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      min-width: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────────────────────────── */
+    .topbar {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-md);
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 0.06em;
+      color: var(--txt);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .status-pill {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 7px 16px;
+      padding: 5px 13px;
       background: var(--surface-low);
       border: 1px solid var(--border-md);
       font-family: 'JetBrains Mono', monospace;
@@ -179,176 +304,89 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--green);
-      animation: pulse 2.5s ease-in-out infinite;
+      background: var(--accent);
       flex-shrink: 0;
+      animation: blink 2.4s ease-in-out infinite;
     }
 
-    @keyframes pulse {
+    @keyframes blink {
 
       0%,
       100% {
-        opacity: 1;
+        opacity: 1
       }
 
       50% {
-        opacity: 0.3;
+        opacity: 0.2
       }
     }
 
-    /* ── App Shell ──────────────────────────────────────────────────────────── */
-    .app-shell {
-      display: flex;
-      min-height: calc(100vh - 64px);
-    }
-
-    /* ── Side Navigation ────────────────────────────────────────────────────── */
-    .side-nav {
-      width: 248px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 64px;
-      height: calc(100vh - 64px);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+    .theme-btn {
+      padding: 5px 11px;
       background: var(--surface-low);
-      border-right: 1px solid var(--border);
-      padding: 0 0 24px;
-    }
-
-    .side-nav-brand {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 8px;
-    }
-
-    .side-brand-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 16px;
-      font-weight: 600;
-      font-style: italic;
-      color: var(--primary);
-      margin-bottom: 4px;
-    }
-
-    .side-brand-sub {
+      border: 1px solid var(--border-md);
+      color: var(--txt2);
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      color: var(--txt3);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .side-nav-items {
-      flex: 1;
-      list-style: none;
-      padding: 4px 0;
-    }
-
-    .side-nav-items a {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--txt2);
-      text-decoration: none;
-      transition: all 0.15s;
-      border-left: 2px solid transparent;
-    }
-
-    .side-nav-items a:hover {
-      background: var(--surface-mid);
-      color: var(--primary);
-      border-left-color: var(--border-dark);
-    }
-
-    .side-nav-items a.active {
-      color: var(--primary);
-      background: var(--surface);
-      border-left-color: var(--primary);
-      padding-left: 18px;
-    }
-
-    .side-nav-items a .material-symbols-outlined {
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .side-nav-footer {
-      padding: 16px 20px 0;
-      margin-top: auto;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn-new-analysis {
-      width: 100%;
-      padding: 10px;
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background .15s;
     }
 
-    .btn-new-analysis:hover {
-      background: var(--primary);
-      color: var(--on-primary);
+    .theme-btn:hover {
+      background: var(--surface-mid);
+      color: var(--txt);
     }
 
-    /* ── Main Content ───────────────────────────────────────────────────────── */
-    .main-content {
+    /* ── Workspace Container ─────────────────────────────────────────────────── */
+    .workspace-wrap {
       flex: 1;
-      min-width: 0;
-      padding: 32px 36px 48px;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
-    /* ── Page Header ────────────────────────────────────────────────────────── */
-    .page-header {
+    .workspace {
+      display: none;
+      padding: 32px 36px 56px;
+      max-width: 1160px;
+    }
+
+    .workspace.active {
+      display: block;
+    }
+
+    /* ── Workspace Header ────────────────────────────────────────────────────── */
+    .ws-header {
+      padding-bottom: 22px;
+      border-bottom: 2px solid var(--txt);
       margin-bottom: 28px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border-md);
     }
 
-    .page-title {
-      font-family: 'Playfair Display', serif;
+    .ws-title {
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 44px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--primary);
-      line-height: 1.05;
+      letter-spacing: 0.04em;
+      color: var(--txt);
+      line-height: 1;
       margin-bottom: 10px;
     }
 
-    .page-title em {
-      font-style: italic;
-    }
-
-    .page-sub {
-      font-size: 14px;
+    .ws-sub {
+      font-size: 13px;
       color: var(--txt2);
-      line-height: 1.65;
-      border-left: 2px solid var(--border-dark);
-      padding-left: 14px;
-      max-width: 600px;
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
     }
 
-    /* ── Controls Bar ───────────────────────────────────────────────────────── */
+    /* ── Controls Bar ────────────────────────────────────────────────────────── */
     .ctrl-bar {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-md);
+      border-left: 3px solid var(--accent);
       padding: 18px 24px;
       margin-bottom: 20px;
       flex-wrap: wrap;
@@ -362,28 +400,24 @@
     .ctrl-label {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--txt3);
       margin-bottom: 10px;
     }
 
     #thr-val {
-      color: var(--primary);
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 600;
-      font-size: 12px;
+      color: var(--accent);
     }
 
     .slider {
       -webkit-appearance: none;
       width: 100%;
       height: 2px;
-      background: var(--surface-max);
-      border-radius: 0;
+      background: var(--surface-mid);
       outline: none;
       cursor: pointer;
     }
@@ -392,10 +426,10 @@
       -webkit-appearance: none;
       width: 14px;
       height: 14px;
-      background: var(--primary);
+      background: var(--accent);
       border-radius: 50%;
       cursor: pointer;
-      transition: transform 0.15s;
+      transition: transform .15s;
     }
 
     .slider::-webkit-slider-thumb:hover {
@@ -405,10 +439,9 @@
     .slider::-moz-range-thumb {
       width: 14px;
       height: 14px;
-      background: var(--primary);
+      background: var(--accent);
       border: none;
       border-radius: 50%;
-      cursor: pointer;
     }
 
     .ctrl-actions {
@@ -417,44 +450,42 @@
       flex-wrap: wrap;
     }
 
-    /* ── Buttons ────────────────────────────────────────────────────────────── */
+    /* ── Buttons (workspace area) ────────────────────────────────────────────── */
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 10px 18px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      gap: 7px;
+      padding: 9px 18px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.06em;
       cursor: pointer;
-      outline: none;
+      border: 2px solid transparent;
       white-space: nowrap;
-      transition: all 0.15s;
-      border: 1px solid transparent;
+      transition: all .15s;
     }
 
-    .btn .material-symbols-outlined {
-      font-size: 16px;
+    .btn:hover {
+      transform: translateY(-1px);
     }
 
     .btn-primary {
-      background: var(--primary);
-      color: var(--on-primary);
-      border-color: var(--primary);
+      background: var(--txt);
+      color: var(--bg);
+      border-color: var(--txt);
     }
 
     .btn-primary:hover {
-      background: #222;
-      border-color: #222;
+      background: var(--accent);
+      border-color: var(--accent);
     }
 
     .btn-primary:disabled {
-      background: var(--surface-max);
+      background: var(--surface-mid);
       color: var(--txt3);
       border-color: transparent;
       cursor: not-allowed;
+      transform: none;
     }
 
     .btn-outline {
@@ -465,31 +496,22 @@
 
     .btn-outline:hover {
       background: var(--surface-low);
-      color: var(--primary);
-      border-color: var(--border-dark);
+      color: var(--txt);
+      border-color: var(--txt);
     }
 
-    .btn-green {
-      background: var(--green-tint);
-      color: var(--green);
-      border-color: rgba(61, 104, 61, 0.18);
-    }
-
-    .btn-green:hover {
-      background: rgba(61, 104, 61, 0.14);
-    }
-
-    /* ── Resolve Banner ─────────────────────────────────────────────────────── */
+    /* ── Resolve Banner ──────────────────────────────────────────────────────── */
     .resolve-banner {
       display: none;
       align-items: center;
       justify-content: space-between;
       padding: 12px 20px;
       background: var(--amber-bg);
-      border: 1px solid rgba(180, 83, 9, 0.18);
+      border: 1px solid rgba(146, 64, 14, 0.20);
       border-left: 3px solid var(--amber);
       margin-bottom: 20px;
-      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
       color: var(--amber);
     }
 
@@ -498,116 +520,101 @@
       border: none;
       color: var(--amber);
       cursor: pointer;
-      padding: 2px;
-      display: flex;
-      align-items: center;
-      font-family: inherit;
-      font-size: 14px;
+      font-size: 18px;
+      line-height: 1;
     }
 
-    /* ── Stats Row ──────────────────────────────────────────────────────────── */
-    .stats-row {
+    /* ── Stats Grid ──────────────────────────────────────────────────────────── */
+    .stats-grid {
       display: grid;
+      gap: 2px;
+      margin-bottom: 20px;
+      background: var(--border-md);
+      border: 1px solid var(--border-md);
+    }
+
+    .stats-grid.cols-4 {
       grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 24px;
+    }
+
+    .stats-grid.cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stats-grid.cols-2 {
+      grid-template-columns: repeat(2, 1fr);
     }
 
     .stat-card {
       background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 20px 20px 16px;
+      padding: 22px 22px 18px;
       display: flex;
       flex-direction: column;
-      position: relative;
-      overflow: hidden;
+      gap: 6px;
+      transition: box-shadow .15s;
     }
 
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border-dark), transparent);
+    .stat-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+      z-index: 1;
     }
 
     .stat-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--txt3);
-      margin-bottom: 8px;
     }
 
     .stat-val {
-      font-family: 'Playfair Display', serif;
-      font-size: 36px;
-      font-weight: 700;
-      line-height: 1.05;
-      color: var(--primary);
-      letter-spacing: -0.02em;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 40px;
+      letter-spacing: 0.02em;
+      color: var(--txt);
+      line-height: 1;
     }
 
-    .stat-val.acc {
-      color: var(--primary);
+    .stat-val.accent {
+      color: var(--accent);
     }
 
-    .stat-val.grn {
-      color: var(--green);
+    .stat-val.mono-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
     }
 
     .stat-det {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--txt2);
-      margin-top: 4px;
-      margin-bottom: 10px;
-    }
-
-    .stat-bar {
-      height: 2px;
-      background: var(--surface-max);
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
       margin-top: auto;
-      overflow: hidden;
     }
 
-    .stat-bar-fill {
-      height: 100%;
-      background: var(--primary);
-    }
-
-    .stat-bar-fill.green {
-      background: var(--green);
-    }
-
-    /* ── Content Sections ───────────────────────────────────────────────────── */
+    /* ── Section Cards ───────────────────────────────────────────────────────── */
     .section {
       background: var(--surface);
-      border: 1px solid var(--border);
-      margin-bottom: 24px;
-      overflow: hidden;
+      border: 1px solid var(--border-md);
+      margin-bottom: 2px;
     }
 
     .sec-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-md);
     }
 
     .sec-title {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 22px;
-      font-weight: 600;
-      color: var(--primary);
-    }
-
-    .sec-title em {
-      font-style: italic;
+      letter-spacing: 0.04em;
+      color: var(--txt);
     }
 
     .sec-meta {
@@ -615,10 +622,10 @@
       font-size: 10px;
       color: var(--txt3);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.10em;
     }
 
-    /* ── Table ──────────────────────────────────────────────────────────────── */
+    /* ── Table ───────────────────────────────────────────────────────────────── */
     .tbl {
       width: 100%;
       border-collapse: collapse;
@@ -630,17 +637,19 @@
 
     .tbl th {
       text-align: left;
-      padding: 12px 20px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      padding: 11px 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--txt3);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-md);
+      white-space: nowrap;
     }
 
     .tbl td {
-      padding: 16px 20px;
+      padding: 14px 22px;
       border-bottom: 1px solid var(--border);
       font-size: 13px;
       color: var(--txt);
@@ -652,24 +661,22 @@
 
     .tbl tbody tr:hover {
       background: var(--surface-low);
-      transition: background 0.1s;
+      transition: background .1s;
     }
 
-    /* ── Table Cell Classes (used by JS) ────────────────────────────────────── */
+    /* ── Signal cell classes (JS-generated) ──────────────────────────────────── */
     .rank {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      font-style: italic;
-      font-weight: 600;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
       color: var(--txt3);
+      letter-spacing: 0.04em;
     }
 
     .ticker-sym {
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
       font-weight: 600;
-      color: var(--primary);
-      letter-spacing: -0.01em;
+      color: var(--txt);
     }
 
     .conf-bar {
@@ -681,7 +688,7 @@
     .conf-track {
       width: 72px;
       height: 2px;
-      background: var(--surface-max);
+      background: var(--surface-mid);
       overflow: hidden;
       flex-shrink: 0;
     }
@@ -698,11 +705,11 @@
     }
 
     .cg {
-      color: #3d683d;
+      color: var(--accent);
     }
 
     .cy {
-      color: #b45309;
+      color: var(--amber);
     }
 
     .cw {
@@ -722,7 +729,7 @@
     }
 
     .mom.pos {
-      color: var(--green);
+      color: var(--accent);
     }
 
     .mom.neg {
@@ -743,7 +750,7 @@
     }
 
     .rsi-nt {
-      background: var(--surface-hi);
+      background: var(--surface-low);
       color: var(--txt2);
     }
 
@@ -759,13 +766,13 @@
     }
 
     .vol.spike {
-      color: var(--primary);
+      color: var(--txt);
       font-weight: 600;
     }
 
-    /* ── History Row Classes (used by JS) ───────────────────────────────────── */
+    /* ── History row colours (JS-generated) ──────────────────────────────────── */
     .hist-row-win td {
-      border-left: 3px solid var(--green);
+      border-left: 3px solid var(--accent);
     }
 
     .hist-row-loss td {
@@ -773,26 +780,71 @@
     }
 
     .hist-row-pend td {
-      border-left: 3px solid var(--outline-var);
+      border-left: 3px solid var(--border-dark);
     }
 
-    /* ── Empty / Loading States ─────────────────────────────────────────────── */
+    /* ── Search / Filter bar ─────────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-low);
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 180px;
+      padding: 7px 12px;
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      color: var(--txt);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-input::placeholder {
+      color: var(--txt3);
+    }
+
+    .filter-select {
+      padding: 7px 12px;
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      color: var(--txt2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ── Empty / Loading ─────────────────────────────────────────────────────── */
     .empty {
       padding: 64px 24px;
       text-align: center;
     }
 
     .empty-t {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      font-style: italic;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 0.04em;
       color: var(--txt2);
       margin-bottom: 8px;
     }
 
     .empty-s {
-      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
       color: var(--txt3);
+      letter-spacing: 0.04em;
     }
 
     .loading {
@@ -801,13 +853,13 @@
     }
 
     .spin {
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       margin: 0 auto 16px;
-      border: 2px solid var(--surface-max);
-      border-top-color: var(--primary);
+      border: 2px solid var(--surface-mid);
+      border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin .8s linear infinite;
     }
 
     @keyframes spin {
@@ -818,171 +870,127 @@
 
     .spin-txt {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--txt2);
-      letter-spacing: 0.1em;
+      font-size: 10px;
+      color: var(--txt3);
+      letter-spacing: 0.14em;
       text-transform: uppercase;
     }
 
-    /* ── Excel Notice ───────────────────────────────────────────────────────── */
+    /* ── Excel notice ────────────────────────────────────────────────────────── */
     .xl-notice {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 20px;
-      background: var(--green-tint);
-      border-top: 1px solid var(--border);
+      padding: 12px 22px;
+      background: var(--accent-light);
+      border-top: 1px solid var(--border-md);
+      font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-      color: var(--green);
+      color: var(--accent);
     }
 
     .xl-notice strong {
-      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
     }
 
-    /* ── Risk Section ───────────────────────────────────────────────────────── */
+    /* ── Active trades placeholder ───────────────────────────────────────────── */
+    .placeholder-note {
+      padding: 32px 28px;
+      background: var(--surface-low);
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--txt3);
+      letter-spacing: 0.04em;
+      line-height: 1.8;
+    }
+
+    /* ── Risk Panel ──────────────────────────────────────────────────────────── */
     .risk {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--primary);
-      padding: 24px 28px;
-      margin-bottom: 32px;
+      border: 1px solid var(--border-md);
+      border-left: 3px solid var(--txt);
+      padding: 26px 28px;
     }
 
     .risk-t {
-      font-family: 'Playfair Display', serif;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--primary);
-      margin-bottom: 16px;
-    }
-
-    .risk-t em {
-      font-style: italic;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 0.04em;
+      color: var(--txt);
+      margin-bottom: 18px;
     }
 
     .risk-rules {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 12px;
       list-style: none;
     }
 
     .risk-rules li {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      font-size: 12px;
+      gap: 10px;
+      font-size: 13px;
       color: var(--txt2);
-      line-height: 1.55;
+      line-height: 1.6;
     }
 
     .risk-rules li::before {
       content: '→';
-      color: var(--primary);
-      font-weight: 700;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
       flex-shrink: 0;
     }
 
-    /* ── Theme Toggle Button ────────────────────────────────────────────────── */
-    .theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 6px 12px;
-      background: var(--surface-low);
-      border: 1px solid var(--border-md);
-      color: var(--txt2);
-      font-family: 'Plus Jakarta Sans', sans-serif;
+    /* ── Statistics placeholders ─────────────────────────────────────────────── */
+    .stats-placeholder {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
+      color: var(--txt3);
+      padding: 12px 0 4px;
+      letter-spacing: 0.04em;
     }
 
-    .theme-toggle:hover {
-      background: var(--surface-mid);
+    /* ── Responsive ──────────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      :root {
+        --sidebar-w: 180px;
+      }
+
+      .workspace {
+        padding: 24px 24px 48px;
+      }
     }
 
-    .theme-toggle .material-symbols-outlined {
-      font-size: 16px;
-      transition: color 0.2s;
-    }
-
-    .toggle-lbl {
-      transition: opacity 0.2s;
-    }
-
-    .toggle-lbl-light {
-      opacity: 1;
-      color: var(--txt);
-    }
-
-    .toggle-lbl-dark {
-      opacity: 0.35;
-    }
-
-    body.dark .toggle-lbl-light {
-      opacity: 0.35;
-      color: var(--txt2);
-    }
-
-    body.dark .toggle-lbl-dark {
-      opacity: 1;
-      color: var(--txt);
-    }
-
-    .toggle-track {
-      width: 28px;
-      height: 14px;
-      background: var(--surface-max);
-      border-radius: 7px;
-      position: relative;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-
-    body.dark .toggle-track {
-      background: var(--txt2);
-    }
-
-    .toggle-thumb {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 10px;
-      height: 10px;
-      background: var(--txt3);
-      border-radius: 50%;
-      transition: transform 0.22s ease, background 0.2s;
-    }
-
-    body.dark .toggle-thumb {
-      transform: translateX(14px);
-      background: var(--on-primary);
-    }
-
-    /* ── Responsive ─────────────────────────────────────────────────────────── */
-    @media (max-width: 960px) {
-      .side-nav {
+    @media (max-width: 768px) {
+      .sidebar {
         display: none;
       }
 
-      .stats-row {
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .main {
+        height: auto;
+      }
+
+      .workspace-wrap {
+        overflow: visible;
+      }
+
+      .workspace {
+        padding: 20px 16px 48px;
+      }
+
+      .stats-grid.cols-4 {
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .ctrl-bar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .ctrl-actions {
-        justify-content: flex-end;
-      }
-
-      .page-title {
+      .ws-title {
         font-size: 32px;
       }
 
@@ -991,21 +999,15 @@
       }
     }
 
-    @media (max-width: 600px) {
-      .main-content {
-        padding: 16px;
+    @media (max-width: 520px) {
+
+      .stats-grid.cols-4,
+      .stats-grid.cols-3 {
+        grid-template-columns: repeat(2, 1fr);
       }
 
-      .stats-row {
+      .stats-grid.cols-2 {
         grid-template-columns: 1fr 1fr;
-      }
-
-      .nav-links {
-        display: none;
-      }
-
-      .page-title {
-        font-size: 26px;
       }
     }
   </style>
@@ -1013,236 +1015,345 @@
 
 <body>
 
-  <!-- ── TOP NAVIGATION ──────────────────────────────────────────────────── -->
-  <header class="topnav">
-    <div class="nav-left">
-      <span class="brand-wordmark">Quant.ML</span>
-      <nav class="nav-links">
-        <a class="nav-link" href="#">Markets</a>
-        <a class="nav-link" href="#">Screener</a>
-        <a class="nav-link" href="#">Research</a>
-      </nav>
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">Signal Desk</div>
+      <div class="brand-sub">NSE Research Terminal</div>
     </div>
-    <div class="nav-right">
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
-        <span class="material-symbols-outlined">wb_sunny</span>
-        <span class="toggle-lbl toggle-lbl-light">LIGHT</span>
-        <div class="toggle-track">
-          <div class="toggle-thumb"></div>
-        </div>
-        <span class="toggle-lbl toggle-lbl-dark">DARK</span>
-        <span class="material-symbols-outlined">dark_mode</span>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspaces</div>
+      <button class="nav-item active" id="nav-today" onclick="switchWs('today')">
+        <span class="nav-icon">◈</span> Today
       </button>
-      <div class="status-pill">
-        <span class="status-dot" id="dot"></span>
-        <span id="status-text">Connecting...</span>
-      </div>
+      <button class="nav-item" id="nav-active" onclick="switchWs('active')">
+        <span class="nav-icon">◎</span> Active Trades
+      </button>
+      <button class="nav-item" id="nav-history" onclick="switchWs('history')">
+        <span class="nav-icon">≡</span> History
+      </button>
+      <button class="nav-item" id="nav-stats" onclick="switchWs('stats')">
+        <span class="nav-icon">∿</span> Statistics
+      </button>
+
+      <hr class="nav-divider">
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-run" id="scan-btn" onclick="runScan()">▸ Run Scanner</button>
+      <button class="btn-logout" onclick="handleLogout()">↩ Logout</button>
     </div>
-  </header>
+  </aside>
 
-  <!-- ── APP SHELL ───────────────────────────────────────────────────────── -->
-  <div class="app-shell">
+  <!-- ── MAIN ────────────────────────────────────────────────────────────────── -->
+  <div class="main">
 
-    <!-- SIDE NAV -->
-    <aside class="side-nav">
-      <div class="side-nav-brand">
-        <div class="side-brand-title">NSE Terminal</div>
-        <div class="side-brand-sub">Engine v2.0 Active</div>
-      </div>
-      <ul class="side-nav-items">
-        <li>
-          <a class="active" href="#">
-            <span class="material-symbols-outlined">dashboard</span>
-            Dashboard
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <span class="material-symbols-outlined">sensors</span>
-            Live Signals
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <span class="material-symbols-outlined">history</span>
-            Trade History
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <span class="material-symbols-outlined">account_balance_wallet</span>
-            Portfolio
-          </a>
-        </li>
-      </ul>
-      <div class="side-nav-footer">
-        <button class="btn-new-analysis">New Analysis</button>
-        <div style="margin-top:16px; display:flex; flex-direction:column; gap:2px;">
-          <a href="#"
-            style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--txt2);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-            <span class="material-symbols-outlined" style="font-size:16px">description</span> Docs
-          </a>
-          <a href="#"
-            style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--txt2);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-            <span class="material-symbols-outlined" style="font-size:16px">help</span> Support
-          </a>
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Today</div>
+      <div class="topbar-right">
+        <div class="status-pill">
+          <span class="status-dot" id="dot"></span>
+          <span id="status-text" style="font-family:'JetBrains Mono',monospace;">Connecting...</span>
         </div>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-
-      <!-- PAGE HEADER -->
-      <div class="page-header">
-        <h1 class="page-title">Find the <em>signal</em> in the noise.</h1>
-        <p class="page-sub">XGBoost model scans 200 NSE stocks daily for high-probability 5-day setups. Signals
-          auto-logged to Excel. Exit prices auto-filled after 5 days.</p>
-      </div>
-
-      <!-- CONTROLS -->
-      <div class="ctrl-bar">
-        <div class="ctrl-threshold">
-          <div class="ctrl-label">
-            <span>Confidence Threshold</span>
-            <span id="thr-val">60%</span>
-          </div>
-          <input type="range" min="50" max="85" value="60" class="slider" id="slider">
-        </div>
-        <div class="ctrl-actions">
-          <button class="btn btn-green" onclick="checkResolved()">
-            <span class="material-symbols-outlined">sync</span>
-            Resolve Exits
-          </button>
-          <button class="btn btn-outline" onclick="openExcel()">
-            <span class="material-symbols-outlined">table_chart</span>
-            Excel Log
-          </button>
-          <button class="btn btn-primary" id="scan-btn" onclick="runScan()">
-            <span class="material-symbols-outlined">play_arrow</span>
-            Run Scanner
-          </button>
-        </div>
-      </div>
-
-      <!-- RESOLVE BANNER -->
-      <div class="resolve-banner" id="resolve-banner">
-        <span id="resolve-msg">Checking pending trades...</span>
-        <button class="btn-close" onclick="document.getElementById('resolve-banner').style.display='none'">
-          <span class="material-symbols-outlined">close</span>
+        <button class="theme-btn" onclick="toggleTheme()">
+          <span id="theme-icon">☽</span> <span id="theme-lbl">Dark</span>
         </button>
       </div>
+    </div>
 
-      <!-- STATS -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Universe</div>
-          <div class="stat-val">200</div>
-          <div class="stat-det">NSE / BSE liquid stocks</div>
-          <div class="stat-bar">
-            <div class="stat-bar-fill" style="width:100%"></div>
+    <!-- Scrollable workspace area -->
+    <div class="workspace-wrap">
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 1 — TODAY
+      ══════════════════════════════════════════ -->
+      <div class="workspace active" id="ws-today">
+        <div class="ws-header">
+          <div class="ws-title">Today's Signals</div>
+          <p class="ws-sub">XGBoost model scans 200+ NSE stocks for high-probability 5-day setups. Signals auto-logged
+            to Excel.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="ctrl-bar">
+          <div class="ctrl-threshold">
+            <div class="ctrl-label">
+              <span>Confidence Threshold</span>
+              <span id="thr-val">60%</span>
+            </div>
+            <input type="range" min="50" max="85" value="60" class="slider" id="slider">
+          </div>
+          <div class="ctrl-actions">
+            <button class="btn btn-outline" onclick="checkResolved()">↻ Resolve Exits</button>
+            <button class="btn btn-outline" onclick="openExcel()">⊞ Excel Log</button>
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Signals Today</div>
-          <div class="stat-val acc" id="sig-count">—</div>
-          <div class="stat-det" id="sig-detail">Run scan to see</div>
-          <div class="stat-bar">
-            <div class="stat-bar-fill green" style="width:0%"></div>
+
+        <!-- Resolve banner -->
+        <div class="resolve-banner" id="resolve-banner">
+          <span id="resolve-msg">Checking pending trades...</span>
+          <button class="btn-close" onclick="document.getElementById('resolve-banner').style.display='none'">✕</button>
+        </div>
+
+        <!-- Summary stats -->
+        <div class="stats-grid cols-4">
+          <div class="stat-card">
+            <div class="stat-label">Universe</div>
+            <div class="stat-val">200</div>
+            <div class="stat-det">NSE / BSE liquid stocks</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Signals Today</div>
+            <div class="stat-val accent" id="sig-count">—</div>
+            <div class="stat-det" id="sig-detail">Run scan to see</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Top Confidence</div>
+            <div class="stat-val accent" id="top-conf">—</div>
+            <div class="stat-det" id="top-tick">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Last Scan</div>
+            <div class="stat-val mono-val" id="last-time">—</div>
+            <div class="stat-det" id="last-date">—</div>
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Top Confidence</div>
-          <div class="stat-val grn" id="top-conf">—</div>
-          <div class="stat-det" id="top-tick">—</div>
-          <div class="stat-bar">
-            <div class="stat-bar-fill green" style="width:0%"></div>
+
+        <!-- Signals section -->
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title">Picks</div>
+            <div class="sec-meta" id="tbl-meta">Awaiting scan</div>
           </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Last Scan</div>
-          <div class="stat-val" id="last-time"
-            style="font-size:22px;font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:-0.01em;">—
-          </div>
-          <div class="stat-det" id="last-date">—</div>
-          <div class="stat-bar">
-            <div class="stat-bar-fill" style="width:35%"></div>
+          <div id="signals-box">
+            <div class="empty">
+              <div class="empty-t">Loading last scan...</div>
+              <div class="empty-s">Fetching previous results from disk</div>
+            </div>
           </div>
         </div>
       </div>
+      <!-- /ws-today -->
 
-      <!-- SIGNALS SECTION -->
-      <div class="section">
-        <div class="sec-head">
-          <div class="sec-title">Today's <em>Picks</em></div>
-          <div class="sec-meta" id="tbl-meta">Awaiting scan</div>
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 2 — ACTIVE TRADES
+      ══════════════════════════════════════════ -->
+      <div class="workspace" id="ws-active">
+        <div class="ws-header">
+          <div class="ws-title">Active Trades</div>
+          <p class="ws-sub">Open positions currently inside the 5-day holding window.</p>
         </div>
-        <div id="signals-box">
-          <div class="empty">
-            <div class="empty-t">Loading last scan...</div>
-            <div class="empty-s">Fetching previous results from disk</div>
+
+        <!-- Stats -->
+        <div class="stats-grid cols-3" style="margin-bottom:20px;">
+          <div class="stat-card">
+            <div class="stat-label">Open Positions</div>
+            <div class="stat-val accent" id="active-count">—</div>
+            <div class="stat-det">Pending resolution</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Days Held</div>
+            <div class="stat-val mono-val" id="active-avg-days">—</div>
+            <div class="stat-det">Of 5-day window</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Unrealised P/L</div>
+            <div class="stat-val mono-val" id="active-pnl">—</div>
+            <div class="stat-det">Pending exit price</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title">Open Positions</div>
+            <div class="sec-meta">Signals pending exit</div>
+          </div>
+          <div id="active-box">
+            <div class="empty">
+              <div class="empty-t">Loading...</div>
+              <div class="empty-s">Fetching pending trades from history</div>
+            </div>
+          </div>
+          <div class="placeholder-note">
+            Active trades are derived from History records where Exit Price = Pending.
+            Exit prices auto-fill after 5 trading days via Resolve Exits.
           </div>
         </div>
       </div>
+      <!-- /ws-active -->
 
-      <!-- HISTORY SECTION -->
-      <div class="section">
-        <div class="sec-head">
-          <div class="sec-title">Trade <em>History</em></div>
-          <div class="sec-meta" id="hist-meta">All logged signals</div>
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 3 — HISTORY
+      ══════════════════════════════════════════ -->
+      <div class="workspace" id="ws-history">
+        <div class="ws-header">
+          <div class="ws-title">Trade History</div>
+          <p class="ws-sub">Complete log of every signal generated. Resolved trades show entry → exit → return.</p>
         </div>
-        <div id="history-box">
-          <div class="empty">
-            <div class="empty-t">No history yet</div>
-            <div class="empty-s">Past signals will appear here after your first scan</div>
+
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title">All Signals</div>
+            <div class="sec-meta" id="hist-meta">Loading...</div>
+          </div>
+
+          <!-- Filter bar -->
+          <div class="filter-bar">
+            <input type="text" class="search-input" id="hist-search" placeholder="Search ticker..."
+              oninput="filterHistory()">
+            <select class="filter-select" id="hist-outcome" onchange="filterHistory()">
+              <option value="">All Outcomes</option>
+              <option value="Win">Win</option>
+              <option value="Loss">Loss</option>
+              <option value="Pending">Pending</option>
+            </select>
+            <select class="filter-select" id="hist-sort" onchange="filterHistory()">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="conf-desc">Confidence ↓</option>
+              <option value="ret-desc">Return ↓</option>
+            </select>
+          </div>
+
+          <div id="history-box">
+            <div class="empty">
+              <div class="empty-t">No history yet</div>
+              <div class="empty-s">Past signals will appear here after your first scan</div>
+            </div>
           </div>
         </div>
       </div>
+      <!-- /ws-history -->
 
-      <!-- RISK RULES -->
-      <div class="risk">
-        <div class="risk-t">Trading <em>Rules</em></div>
-        <ul class="risk-rules">
-          <li>Never put more than 10% of capital in one stock</li>
-          <li>Always set stop-loss at -3% from entry price</li>
-          <li>Exit positions after 5 trading days regardless of P&L</li>
-          <li>Three consecutive losses → stop trading for the week</li>
-          <li>Paper trade for 4-6 weeks before using real money</li>
-          <li>This is a tool, not a guarantee. Markets can break any model.</li>
-        </ul>
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 4 — STATISTICS
+      ══════════════════════════════════════════ -->
+      <div class="workspace" id="ws-stats">
+        <div class="ws-header">
+          <div class="ws-title">Statistics</div>
+          <p class="ws-sub">Aggregate performance metrics computed from all resolved trades.</p>
+        </div>
+
+        <!-- Primary metrics -->
+        <div class="stats-grid cols-4" style="margin-bottom:2px;">
+          <div class="stat-card">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-val accent" id="stat-winrate">—</div>
+            <div class="stat-det">Resolved trades only</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Return</div>
+            <div class="stat-val mono-val" id="stat-avgret">—</div>
+            <div class="stat-det">Per resolved trade</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Trades</div>
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-det">All-time signals</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-val" id="stat-pending">—</div>
+            <div class="stat-det">Awaiting exit price</div>
+          </div>
+        </div>
+
+        <!-- Secondary metrics -->
+        <div class="stats-grid cols-4" style="margin-bottom:20px;">
+          <div class="stat-card">
+            <div class="stat-label">Winning Trades</div>
+            <div class="stat-val accent" id="stat-wins">—</div>
+            <div class="stat-det">Return &gt; 0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Losing Trades</div>
+            <div class="stat-val" style="color:var(--red)" id="stat-losses">—</div>
+            <div class="stat-det">Return &lt; 0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Best Trade</div>
+            <div class="stat-val mono-val accent" id="stat-best">—</div>
+            <div class="stat-det" id="stat-best-tick">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Worst Trade</div>
+            <div class="stat-val mono-val" style="color:var(--red)" id="stat-worst">—</div>
+            <div class="stat-det" id="stat-worst-tick">—</div>
+          </div>
+        </div>
+
+        <!-- Risk Rules -->
+        <div class="risk">
+          <div class="risk-t">Trading Rules</div>
+          <ul class="risk-rules">
+            <li>Never put more than 10% of capital in one stock</li>
+            <li>Always set stop-loss at -3% from entry price</li>
+            <li>Exit positions after 5 trading days regardless of P&L</li>
+            <li>Three consecutive losses → stop trading for the week</li>
+            <li>Paper trade for 4–6 weeks before using real money</li>
+            <li>This is a tool, not a guarantee. Markets can break any model.</li>
+          </ul>
+        </div>
       </div>
+      <!-- /ws-stats -->
 
-    </main>
-  </div>
+    </div><!-- /workspace-wrap -->
+  </div><!-- /main -->
 
   <script type="module">
-    import { auth, onAuthStateChanged } from '/static/auth.js';
-    // ── Slider ────────────────────────────────────────────────────────────────
+    import { auth, onAuthStateChanged, signOut } from '/static/auth.js';
+
+    // ── Workspace navigation ───────────────────────────────────────────────────
+    const WS_TITLES = { today: 'Today', active: 'Active Trades', history: 'History', stats: 'Statistics' };
+
+    function switchWs(name) {
+      document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById('ws-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+      document.getElementById('topbar-title').textContent = WS_TITLES[name];
+      // Scroll workspace back to top
+      document.querySelector('.workspace-wrap').scrollTop = 0;
+    }
+
+    window.switchWs = switchWs;
+
+    // ── Logout ─────────────────────────────────────────────────────────────────
+    window.handleLogout = async function () {
+      try { await signOut(auth); } catch (e) { console.error(e); }
+      window.location.href = '/';
+    };
+
+    // ── Slider ─────────────────────────────────────────────────────────────────
     const slider = document.getElementById('slider');
     slider.addEventListener('input', e => {
       document.getElementById('thr-val').textContent = e.target.value + '%';
     });
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Helpers ────────────────────────────────────────────────────────────────
     function getRsiClass(r) { return r < 40 ? 'rsi-os' : r > 60 ? 'rsi-ob' : 'rsi-nt'; }
     function getRsiLabel(r) { return r < 30 ? 'Oversold' : r < 40 ? 'Weak' : r > 70 ? 'Overbought' : r > 60 ? 'Strong' : 'Neutral'; }
-    function getConfColor(c) { return c >= 0.70 ? '#22c55e' : c >= 0.65 ? '#eab308' : '#a3a3a3'; }
+    function getConfColor(c) { return c >= 0.70 ? '#0F766E' : c >= 0.65 ? '#92400E' : '#888480'; }
     function getConfClass(c) { return c >= 0.70 ? 'cg' : c >= 0.65 ? 'cy' : 'cw'; }
 
+    // ── fetchWithAuth ──────────────────────────────────────────────────────────
     async function fetchWithAuth(url, options = {}) {
       const user = auth.currentUser;
       if (!user) throw new Error('No authenticated user');
       const idToken = await user.getIdToken();
       const headers = new Headers(options.headers || {});
       headers.set('Authorization', `Bearer ${idToken}`);
-      const opts = { ...options, headers };
-      return fetch(url, opts);
+      return fetch(url, { ...options, headers });
     }
 
-    // ── Render signals ────────────────────────────────────────────────────────
+    // ── Render signals ─────────────────────────────────────────────────────────
     function renderSignals(data) {
       const signals = data.signals || [];
-      const now = data.timestamp || new Date().toLocaleTimeString();
 
       document.getElementById('sig-count').textContent = signals.length || '0';
       document.getElementById('sig-detail').textContent =
@@ -1267,17 +1378,17 @@
 
       if (signals.length === 0) {
         document.getElementById('signals-box').innerHTML = `
-      <div class="empty">
-        <div class="empty-t">Market is quiet today</div>
-        <div class="empty-s">No stocks crossed your confidence threshold. Try lowering the slider or wait for tomorrow.</div>
-      </div>`;
+        <div class="empty">
+          <div class="empty-t">Market is quiet today</div>
+          <div class="empty-s">No stocks crossed your confidence threshold. Try lowering the slider or wait for tomorrow.</div>
+        </div>`;
         return;
       }
 
       let html = `<table class="tbl"><thead><tr>
-    <th style="width:50px">#</th><th>Ticker</th><th>Confidence</th>
-    <th>Price</th><th>RSI</th><th>Volume</th><th>5d Mom.</th>
-  </tr></thead><tbody>`;
+        <th style="width:44px">#</th><th>Ticker</th><th>Confidence</th>
+        <th>Price</th><th>RSI</th><th>Volume</th><th>5d Mom.</th>
+      </tr></thead><tbody>`;
 
       signals.forEach((s, i) => {
         const cp = (s.confidence * 100).toFixed(1);
@@ -1286,17 +1397,17 @@
         const ms = s.momentum_5d >= 0 ? '+' : '';
         const vs = s.volume_ratio > 1.5 ? 'spike' : '';
         html += `<tr>
-      <td><span class="rank">${i + 1}</span></td>
-      <td><span class="ticker-sym">${s.ticker}</span></td>
-      <td><div class="conf-bar">
-        <div class="conf-track"><div class="conf-fill" style="width:${cp}%;background:${cc}"></div></div>
-        <span class="conf-val ${getConfClass(s.confidence)}">${cp}%</span>
-      </div></td>
-      <td class="price">₹${s.close.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-      <td><span class="rsi-b ${getRsiClass(s.rsi)}">${s.rsi.toFixed(0)} · ${getRsiLabel(s.rsi)}</span></td>
-      <td class="vol ${vs}">${s.volume_ratio.toFixed(1)}x ${s.volume_ratio > 1.5 ? '🔥' : ''}</td>
-      <td class="mom ${mc}">${ms}${s.momentum_5d.toFixed(1)}%</td>
-    </tr>`;
+          <td><span class="rank">${i + 1}</span></td>
+          <td><span class="ticker-sym">${s.ticker}</span></td>
+          <td><div class="conf-bar">
+            <div class="conf-track"><div class="conf-fill" style="width:${cp}%;background:${cc}"></div></div>
+            <span class="conf-val ${getConfClass(s.confidence)}">${cp}%</span>
+          </div></td>
+          <td class="price">₹${s.close.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+          <td><span class="rsi-b ${getRsiClass(s.rsi)}">${s.rsi.toFixed(0)} · ${getRsiLabel(s.rsi)}</span></td>
+          <td class="vol ${vs}">${s.volume_ratio.toFixed(1)}x ${s.volume_ratio > 1.5 ? '🔥' : ''}</td>
+          <td class="mom ${mc}">${ms}${s.momentum_5d.toFixed(1)}%</td>
+        </tr>`;
       });
 
       html += '</tbody></table>';
@@ -1306,64 +1417,178 @@
       document.getElementById('signals-box').innerHTML = html;
     }
 
-    // ── Load history ──────────────────────────────────────────────────────────
+    // ── Raw history store for client-side filtering ────────────────────────────
+    let _historyRows = [];
+
+    function renderHistoryTable(rows) {
+      if (rows.length === 0) {
+        document.getElementById('history-box').innerHTML = `
+        <div class="empty">
+          <div class="empty-t">No records</div>
+          <div class="empty-s">No signals match your filter</div>
+        </div>`;
+        return;
+      }
+
+      let html = `<table class="tbl"><thead><tr>
+        <th>Date</th><th>Ticker</th><th>Conf%</th><th>Entry ₹</th>
+        <th>Exit ₹</th><th>Return%</th><th>Outcome</th>
+      </tr></thead><tbody>`;
+
+      rows.forEach(r => {
+        const outcome = String(r['Outcome'] || 'Pending');
+        const rowClass = outcome.includes('Win') ? 'hist-row-win' : outcome.includes('Loss') ? 'hist-row-loss' : 'hist-row-pend';
+        const retVal = r['Return%'];
+        const retColor = retVal > 0 ? 'color:var(--accent)' : retVal < 0 ? 'color:var(--red)' : '';
+        html += `<tr class="${rowClass}">
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${String(r['Scan Date']).substring(0, 10)}</td>
+          <td class="ticker-sym">${r['Ticker'] || '—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace">${r['Confidence%'] || '—'}%</td>
+          <td class="price">${r['Entry Price'] ? '₹' + Number(r['Entry Price']).toLocaleString('en-IN') : '—'}</td>
+          <td class="price">${r['Exit Price'] ? '₹' + Number(r['Exit Price']).toLocaleString('en-IN') : 'Pending'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-weight:600;${retColor}">${retVal ? (retVal > 0 ? '+' : '') + retVal + '%' : '—'}</td>
+          <td>${outcome}</td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('history-box').innerHTML = html;
+    }
+
+    window.filterHistory = function () {
+      const q = document.getElementById('hist-search').value.toLowerCase();
+      const outcome = document.getElementById('hist-outcome').value;
+      const sort = document.getElementById('hist-sort').value;
+
+      let rows = _historyRows.filter(r => {
+        const tick = String(r['Ticker'] || '').toLowerCase();
+        const oc = String(r['Outcome'] || 'Pending');
+        return (!q || tick.includes(q)) && (!outcome || oc.includes(outcome));
+      });
+
+      if (sort === 'oldest') rows = [...rows].reverse();
+      else if (sort === 'conf-desc') rows = [...rows].sort((a, b) => (b['Confidence%'] || 0) - (a['Confidence%'] || 0));
+      else if (sort === 'ret-desc') rows = [...rows].sort((a, b) => (b['Return%'] || -999) - (a['Return%'] || -999));
+
+      renderHistoryTable(rows.slice(0, 100));
+    };
+
+    // ── Compute statistics from history rows ───────────────────────────────────
+    function computeStats(rows) {
+      const resolved = rows.filter(r => r['Return%'] !== undefined && r['Return%'] !== null && r['Return%'] !== '');
+      const pending = rows.filter(r => !resolved.includes(r));
+      const wins = resolved.filter(r => Number(r['Return%']) > 0);
+      const losses = resolved.filter(r => Number(r['Return%']) <= 0);
+      const returns = resolved.map(r => Number(r['Return%']));
+      const avgRet = returns.length ? (returns.reduce((a, b) => a + b, 0) / returns.length) : null;
+      const best = returns.length ? Math.max(...returns) : null;
+      const worst = returns.length ? Math.min(...returns) : null;
+      const bestRow = best !== null ? resolved.find(r => Number(r['Return%']) === best) : null;
+      const worstRow = worst !== null ? resolved.find(r => Number(r['Return%']) === worst) : null;
+
+      document.getElementById('stat-winrate').textContent =
+        resolved.length ? Math.round((wins.length / resolved.length) * 100) + '%' : '—';
+      document.getElementById('stat-avgret').textContent =
+        avgRet !== null ? (avgRet >= 0 ? '+' : '') + avgRet.toFixed(2) + '%' : '—';
+      document.getElementById('stat-total').textContent = rows.length || '—';
+      document.getElementById('stat-pending').textContent = pending.length || '—';
+      document.getElementById('stat-wins').textContent = wins.length || '—';
+      document.getElementById('stat-losses').textContent = losses.length || '—';
+      document.getElementById('stat-best').textContent = best !== null ? (best >= 0 ? '+' : '') + best.toFixed(2) + '%' : '—';
+      document.getElementById('stat-worst').textContent = worst !== null ? (worst >= 0 ? '+' : '') + worst.toFixed(2) + '%' : '—';
+      document.getElementById('stat-best-tick').textContent = bestRow ? bestRow['Ticker'] : '—';
+      document.getElementById('stat-worst-tick').textContent = worstRow ? worstRow['Ticker'] : '—';
+    }
+
+    // ── Populate Active Trades from pending history rows ───────────────────────
+    function renderActiveTrades(rows) {
+      const pending = rows.filter(r => {
+        const ep = r['Exit Price'];
+        return !ep || ep === '' || String(ep).toLowerCase() === 'pending';
+      });
+
+      document.getElementById('active-count').textContent = pending.length || '0';
+
+      // Compute avg days held
+      let totalDays = 0, validCount = 0;
+      pending.forEach(r => {
+        const d = r['Scan Date'];
+        if (d) {
+          const ms = Date.now() - new Date(String(d).substring(0, 10)).getTime();
+          const days = Math.floor(ms / 86400000);
+          if (days >= 0) { totalDays += days; validCount++; }
+        }
+      });
+      document.getElementById('active-avg-days').textContent =
+        validCount ? (totalDays / validCount).toFixed(1) + 'd' : '—';
+      document.getElementById('active-pnl').textContent = '—';
+
+      if (pending.length === 0) {
+        document.getElementById('active-box').innerHTML = `
+        <div class="empty">
+          <div class="empty-t">No open positions</div>
+          <div class="empty-s">All trades have been resolved or no signals generated yet</div>
+        </div>`;
+        return;
+      }
+
+      let html = `<table class="tbl"><thead><tr>
+        <th>Entry Date</th><th>Ticker</th><th>Conf%</th>
+        <th>Entry ₹</th><th>Days Held</th><th>Status</th>
+      </tr></thead><tbody>`;
+
+      pending.forEach(r => {
+        const d = r['Scan Date'] ? String(r['Scan Date']).substring(0, 10) : '—';
+        const ms = r['Scan Date'] ? Date.now() - new Date(d).getTime() : null;
+        const days = ms !== null ? Math.max(0, Math.floor(ms / 86400000)) : '—';
+        const daysOf5 = typeof days === 'number' ? Math.min(days, 5) : '—';
+        html += `<tr class="hist-row-pend">
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${d}</td>
+          <td class="ticker-sym">${r['Ticker'] || '—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace">${r['Confidence%'] || '—'}%</td>
+          <td class="price">${r['Entry Price'] ? '₹' + Number(r['Entry Price']).toLocaleString('en-IN') : '—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace">${daysOf5} / 5</td>
+          <td><span class="rsi-b rsi-nt">Open</span></td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('active-box').innerHTML = html;
+    }
+
+    // ── Load history (drives History + Active + Stats workspaces) ──────────────
     async function loadHistory() {
       try {
         const r = await fetchWithAuth('/api/history');
         const data = await r.json();
         const rows = data.history || [];
 
+        _historyRows = [...rows].reverse(); // newest first
         document.getElementById('hist-meta').textContent = `${rows.length} total signals logged`;
 
-        if (rows.length === 0) {
-          document.getElementById('history-box').innerHTML = `
-        <div class="empty"><div class="empty-t">No history yet</div>
-        <div class="empty-s">Run the scanner to start building your trading log</div></div>`;
-          return;
-        }
-
-        // Show last 20, newest first
-        const recent = rows.slice(-20).reverse();
-        let html = `<table class="tbl"><thead><tr>
-      <th>Date</th><th>Ticker</th><th>Conf%</th><th>Entry ₹</th>
-      <th>Exit ₹</th><th>Return%</th><th>Outcome</th>
-    </tr></thead><tbody>`;
-
-        recent.forEach(r => {
-          const outcome = String(r['Outcome'] || 'Pending');
-          const rowClass = outcome.includes('Win') ? 'hist-row-win' : outcome.includes('Loss') ? 'hist-row-loss' : 'hist-row-pend';
-          const retVal = r['Return%'];
-          const retColor = retVal > 0 ? 'color:var(--green)' : retVal < 0 ? 'color:var(--red)' : '';
-          html += `<tr class="${rowClass}">
-        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${String(r['Scan Date']).substring(0, 10)}</td>
-        <td class="ticker-sym">${r['Ticker'] || '—'}</td>
-        <td style="font-family:'JetBrains Mono',monospace">${r['Confidence%'] || '—'}%</td>
-        <td class="price">${r['Entry Price'] ? '₹' + Number(r['Entry Price']).toLocaleString('en-IN') : '—'}</td>
-        <td class="price">${r['Exit Price'] ? '₹' + Number(r['Exit Price']).toLocaleString('en-IN') : 'Pending'}</td>
-        <td style="font-family:'JetBrains Mono',monospace;font-weight:600;${retColor}">${retVal ? (retVal > 0 ? '+' : '') + retVal + '%' : '—'}</td>
-        <td>${outcome}</td>
-      </tr>`;
-        });
-
-        html += '</tbody></table>';
-        document.getElementById('history-box').innerHTML = html;
+        filterHistory();
+        renderActiveTrades(rows);
+        computeStats(rows);
       } catch (e) {
         document.getElementById('history-box').innerHTML = `<div class="empty"><div class="empty-t">Could not load history</div></div>`;
       }
     }
 
-    // ── Run scan ──────────────────────────────────────────────────────────────
-    async function runScan() {
+    // ── Run scan ───────────────────────────────────────────────────────────────
+    window.runScan = async function () {
       const threshold = slider.value / 100;
       const btn = document.getElementById('scan-btn');
       btn.disabled = true;
       btn.innerHTML = '◷ Scanning...';
 
+      // Switch to Today workspace
+      switchWs('today');
+
       document.getElementById('signals-box').innerHTML = `
-    <div class="loading">
-      <div class="spin"></div>
-      <div class="spin-txt">SCANNING ${document.getElementById('sig-detail').textContent.includes('154') ? 154 : 200}+ STOCKS · ~3 MINUTES</div>
-    </div>`;
+      <div class="loading">
+        <div class="spin"></div>
+        <div class="spin-txt">Scanning 200+ stocks · ~3 minutes</div>
+      </div>`;
 
       try {
         const r = await fetchWithAuth(`/api/scan?threshold=${threshold}`);
@@ -1380,14 +1605,13 @@
         btn.disabled = false;
         btn.innerHTML = '▸ Run Scanner';
       }
-    }
+    };
 
-    // ── Auto-resolve trades ───────────────────────────────────────────────────
-    async function checkResolved() {
+    // ── Resolve trades ─────────────────────────────────────────────────────────
+    window.checkResolved = async function () {
       const banner = document.getElementById('resolve-banner');
       banner.style.display = 'flex';
       document.getElementById('resolve-msg').textContent = '↻ Checking pending trades and fetching exit prices...';
-
       try {
         const r = await fetchWithAuth('/api/resolve');
         const data = await r.json();
@@ -1401,22 +1625,21 @@
       } catch (e) {
         document.getElementById('resolve-msg').textContent = '❌ Error: ' + e.message;
       }
-    }
+    };
 
-    // ── Open Excel ────────────────────────────────────────────────────────────
-    async function openExcel() {
+    // ── Open Excel ─────────────────────────────────────────────────────────────
+    window.openExcel = async function () {
       try {
         const r = await fetchWithAuth('/api/open_excel');
         const data = await r.json();
-        if (!data.success) alert('Could not auto-open Excel.\n\nManually go to:\n' + data.error);
+        if (!data.success) alert('Could not auto-open Excel.\n\nManually open:\npaper_trading_log.xlsx\n\n' + (data.error || ''));
       } catch (e) {
         alert('Please open Excel manually from your stock_dashboard folder.\nFile: paper_trading_log.xlsx');
       }
-    }
+    };
 
-    // ── On page load: restore last scan ──────────────────────────────────────
+    // ── Init (called after auth) ───────────────────────────────────────────────
     async function init() {
-      // Check model status
       try {
         const r = await fetchWithAuth('/api/status');
         const data = await r.json();
@@ -1427,14 +1650,12 @@
         } else {
           txt.textContent = 'Model Not Found';
           dot.style.background = '#ef4444';
-          dot.style.boxShadow = '0 0 12px #ef4444';
         }
         if (data.last_scan_time) {
           document.getElementById('last-date').textContent = `Last: ${data.last_scan_time}`;
         }
       } catch (e) { }
 
-      // Load last scan result
       try {
         const r = await fetchWithAuth('/api/last_scan');
         const data = await r.json();
@@ -1442,39 +1663,43 @@
           renderSignals(data);
         } else {
           document.getElementById('signals-box').innerHTML = `
-        <div class="empty">
-          <div class="empty-t">Ready to scan</div>
-          <div class="empty-s">Click "Run Scanner" to find today's signals</div>
-        </div>`;
+          <div class="empty">
+            <div class="empty-t">Ready to scan</div>
+            <div class="empty-s">Click "Run Scanner" to find today's signals</div>
+          </div>`;
         }
       } catch (e) {
         document.getElementById('signals-box').innerHTML = `
-      <div class="empty">
-        <div class="empty-t">Ready to scan</div>
-        <div class="empty-s">Click "Run Scanner" to begin</div>
-      </div>`;
+        <div class="empty">
+          <div class="empty-t">Ready to scan</div>
+          <div class="empty-s">Click "Run Scanner" to begin</div>
+        </div>`;
       }
 
-      // Load history
       loadHistory();
     }
 
-    // ── Theme toggle ──────────────────────────────────────────────────────────
-    function toggleTheme() {
+    // ── Theme ──────────────────────────────────────────────────────────────────
+    window.toggleTheme = function () {
       const isDark = document.body.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    }
+      document.getElementById('theme-icon').textContent = isDark ? '☀' : '☽';
+      document.getElementById('theme-lbl').textContent = isDark ? 'Light' : 'Dark';
+    };
+
     (function () {
-      if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+      if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('theme-icon').textContent = '☀';
+        document.getElementById('theme-lbl').textContent = 'Light';
+      }
     })();
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.href = '/';
-    return;
-  }
-  init();
-});
+    // ── Auth gate ──────────────────────────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (!user) { window.location.href = '/'; return; }
+      init();
+    });
   </script>
 </body>
 
