@@ -107,3 +107,11 @@ coverage/
 stock_dashboard/last_scan.json
 stock_dashboard/paper_trading_log.xlsx
 #==========================================
+# Firebase
+firebase_credentials.json
+
+# Local dashboard backups
+original_dashboard.html
+*_backup.html
+dashboard_before_*.html
+index_backup.html
