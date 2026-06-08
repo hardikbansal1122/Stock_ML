@@ -40,8 +40,44 @@ def require_auth(f):
         token = auth_header.split(" ")[1]
         try:
             decoded_token = auth.verify_id_token(token)
+            print("=" * 50)
+            print("EMAIL FROM FIREBASE:", decoded_token.get("email"))
+            print("FULL TOKEN:", decoded_token)
+            print("=" * 50)
+            email = decoded_token.get("email")
+            print("DEBUG AUTH - Email from token:", email, flush=True)
+            print("DEBUG AUTH - Supabase client:", supabase, flush=True)
+
+            if supabase and email:
+                # Use .ilike for case-insensitive email search
+                response = (
+                    supabase
+                    .table("approved_users")
+                    .select("*")
+                    .ilike("email", email.strip())
+                    .execute()
+                )
+
+                print("FULL TABLE:", response.data)
+                print("EMAIL:", repr(email))
+                print("QUERY RESULT:", response.data)
+                print("DEBUG AUTH - Supabase response data:", response.data, flush=True)
+                if not response.data:
+                    return jsonify({
+                        "error": "Access denied",
+                        "message": "Your email is not approved."
+                    }), 403
+            elif not email:
+                print("DEBUG AUTH - No email found in token!", flush=True)
+                return jsonify({
+                    "error": "Access denied",
+                    "message": "No email associated with this account."
+                }), 403
+
             request.user = decoded_token
+
         except Exception as e:
+            print("DEBUG AUTH - Exception occurred:", str(e), flush=True)
             return jsonify({"error": "Invalid token", "details": str(e)}), 401
             
         return f(*args, **kwargs)
@@ -64,8 +100,8 @@ def require_admin(f):
             
             is_admin = False
             
-            # Check whitelist first
-            if email in ADMIN_EMAILS:
+            # Check whitelist first (case-insensitive)
+            if email and email.strip().lower() in [admin.lower() for admin in ADMIN_EMAILS]:
                 is_admin = True
             elif supabase:
                 # Check database role

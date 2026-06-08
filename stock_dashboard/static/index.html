@@ -4,42 +4,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIGNAL DESK | Systematic Research for the NSE</title>
+  <title>SYGNAL | Systematic Research for the NSE</title>
   <meta name="description"
     content="Machine-learning powered stock research for investors who prefer process over prediction. Systematic NSE equity scanning with quantitative ML signals.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <style>
     /* ══════════════════════════════════════════
        DESIGN TOKENS
        ══════════════════════════════════════════ */
     :root {
-      --bg:            #F3F1EC;
-      --surface:       #FFFFFF;
-      --dark:          #111111;
-      --teal:          #0F766E;
-      --teal-light:    #14B8A6;
-      --teal-dim:      #0d6560;
-      --text:          #111111;
-      --text-secondary:#555555;
-      --text-muted:    #888888;
-      --border:        #D8D4CC;
-      --border-light:  #E8E4DC;
-      --card-shadow:   0 4px 24px rgba(0,0,0,0.10);
-      --card-shadow-hover: 0 16px 48px rgba(0,0,0,0.18);
+      --bg: #F3F1EC;
+      --surface: #FFFFFF;
+      --dark: #111111;
+      --teal: #0F766E;
+      --teal-light: #14B8A6;
+      --teal-dim: #0d6560;
+      --text: #111111;
+      --text-secondary: #555555;
+      --text-muted: #888888;
+      --border: #D8D4CC;
+      --border-light: #E8E4DC;
+      --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+      --card-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.18);
     }
 
     /* ══════════════════════════════════════════
        RESET & BASE
        ══════════════════════════════════════════ */
-    *, *::before, *::after {
-      margin: 0; padding: 0; box-sizing: border-box;
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    html { scroll-behavior: smooth; font-size: 16px; }
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
 
     body {
       background: var(--bg);
@@ -109,14 +115,21 @@
     .nav-links a::after {
       content: '';
       position: absolute;
-      bottom: 0; left: 0;
-      width: 0; height: 1.5px;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 1.5px;
       background: var(--teal);
       transition: width 0.25s ease;
     }
 
-    .nav-links a:hover { color: var(--text); }
-    .nav-links a:hover::after { width: 100%; }
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
 
     .nav-cta {
       font-family: 'Inter', sans-serif;
@@ -164,7 +177,9 @@
       margin-bottom: 28px;
     }
 
-    .hero-headline .line { display: block; }
+    .hero-headline .line {
+      display: block;
+    }
 
     .hero-headline .learn-line {
       display: inline-block;
@@ -230,8 +245,8 @@
       background: var(--dark);
       padding: 0;
       cursor: default;
-      transition: transform 0.25s cubic-bezier(.25,.8,.25,1),
-                  box-shadow 0.25s cubic-bezier(.25,.8,.25,1);
+      transition: transform 0.25s cubic-bezier(.25, .8, .25, 1),
+        box-shadow 0.25s cubic-bezier(.25, .8, .25, 1);
       box-shadow: var(--card-shadow);
     }
 
@@ -246,7 +261,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255, 255, 255, 0.4);
       padding: 14px 18px 0;
     }
 
@@ -275,7 +290,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 16px;
       letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.55);
+      color: rgba(255, 255, 255, 0.55);
       padding: 0 18px 14px;
     }
 
@@ -295,15 +310,25 @@
     }
 
     .live-dot {
-      width: 6px; height: 6px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--teal);
       animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+      }
     }
 
     /* ══════════════════════════════════════════
@@ -369,7 +394,9 @@
       border-left: 1px solid var(--border);
     }
 
-    .trust-logo-item:first-child { border-left: none; }
+    .trust-logo-item:first-child {
+      border-left: none;
+    }
 
     .trust-logo-text {
       font-family: 'Bebas Neue', sans-serif;
@@ -381,7 +408,9 @@
       white-space: nowrap;
     }
 
-    .trust-logo-item:hover .trust-logo-text { opacity: 1; }
+    .trust-logo-item:hover .trust-logo-text {
+      opacity: 1;
+    }
 
     /* ══════════════════════════════════════════
        FEATURES / PILLARS
@@ -401,8 +430,13 @@
       transition: background 0.2s;
     }
 
-    .pillar:last-child { border-right: none; }
-    .pillar:hover { background: rgba(15,118,110,0.03); }
+    .pillar:last-child {
+      border-right: none;
+    }
+
+    .pillar:hover {
+      background: rgba(15, 118, 110, 0.03);
+    }
 
     .pillar-index {
       font-family: 'Inter', sans-serif;
@@ -430,7 +464,10 @@
       max-width: 260px;
     }
 
-    .pillar-desc .hl { color: var(--teal); font-weight: 500; }
+    .pillar-desc .hl {
+      color: var(--teal);
+      font-weight: 500;
+    }
 
     .pillar-bar {
       width: 32px;
@@ -501,7 +538,7 @@
 
     .winner-card:hover {
       transform: translateY(-6px) scale(1.015);
-      box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.1);
       border-color: var(--teal);
     }
 
@@ -577,7 +614,9 @@
       border-top: 1px solid var(--border);
     }
 
-    .workflow-step:last-child { border-right: none; }
+    .workflow-step:last-child {
+      border-right: none;
+    }
 
     .workflow-num {
       font-family: 'Inter', sans-serif;
@@ -613,7 +652,9 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .inside-head { margin-bottom: 48px; }
+    .inside-head {
+      margin-bottom: 48px;
+    }
 
     .inside-grid {
       display: grid;
@@ -644,8 +685,13 @@
       margin-bottom: 8px;
     }
 
-    .inside-card-tag.light { color: rgba(255,255,255,0.4); }
-    .inside-card-tag.dark  { color: var(--text-muted); }
+    .inside-card-tag.light {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .inside-card-tag.dark {
+      color: var(--text-muted);
+    }
 
     .inside-card-title {
       font-family: 'Bebas Neue', sans-serif;
@@ -653,8 +699,13 @@
       letter-spacing: 0.06em;
     }
 
-    .inside-card-title.light { color: #fff; }
-    .inside-card-title.dark  { color: var(--text); }
+    .inside-card-title.light {
+      color: #fff;
+    }
+
+    .inside-card-title.dark {
+      color: var(--text);
+    }
 
     /* Mock dashboard chart */
     .mock-chart-area {
@@ -670,13 +721,13 @@
 
     .mock-bar {
       flex: 1;
-      background: rgba(15,118,110,0.15);
+      background: rgba(15, 118, 110, 0.15);
       border-top: 2px solid var(--teal);
       transition: background 0.2s;
     }
 
     .inside-card:hover .mock-bar {
-      background: rgba(15,118,110,0.22);
+      background: rgba(15, 118, 110, 0.22);
     }
 
     /* Right cards stack */
@@ -696,10 +747,21 @@
       background: var(--teal);
     }
 
-    .inside-mini .inside-card-tag { color: var(--text-muted); }
-    .inside-mini-teal .inside-card-tag { color: rgba(255,255,255,0.6); }
-    .inside-mini .inside-card-title { color: var(--text); }
-    .inside-mini-teal .inside-card-title { color: #fff; }
+    .inside-mini .inside-card-tag {
+      color: var(--text-muted);
+    }
+
+    .inside-mini-teal .inside-card-tag {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .inside-mini .inside-card-title {
+      color: var(--text);
+    }
+
+    .inside-mini-teal .inside-card-title {
+      color: #fff;
+    }
 
     /* ══════════════════════════════════════════
        FINAL CTA
@@ -780,7 +842,7 @@
     .footer-brand-text {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 20px;
-      color: rgba(255,255,255,0.6);
+      color: rgba(255, 255, 255, 0.6);
       letter-spacing: 0.08em;
     }
 
@@ -795,19 +857,21 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255, 255, 255, 0.35);
       text-decoration: none;
       transition: color 0.15s;
     }
 
-    .footer-links-list a:hover { color: rgba(255,255,255,0.7); }
+    .footer-links-list a:hover {
+      color: rgba(255, 255, 255, 0.7);
+    }
 
     .footer-copy {
       font-family: 'Inter', sans-serif;
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.25);
+      color: rgba(255, 255, 255, 0.25);
       text-align: center;
     }
 
@@ -817,7 +881,7 @@
     #loadingOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(243,241,236,0.92);
+      background: rgba(243, 241, 236, 0.92);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -827,43 +891,94 @@
       backdrop-filter: blur(4px);
     }
 
-    #loadingOverlay.hidden { display: none; }
+    #loadingOverlay.hidden {
+      display: none;
+    }
 
     .spinner {
-      width: 28px; height: 28px;
+      width: 28px;
+      height: 28px;
       border: 2px solid var(--border);
       border-top-color: var(--teal);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ══════════════════════════════════════════
        RESPONSIVE
        ══════════════════════════════════════════ */
     @media (max-width: 1100px) {
-      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
-      .hero-right { grid-template-columns: 200px 1fr; }
-      .winners-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .hero-right {
+        grid-template-columns: 200px 1fr;
+      }
+
+      .winners-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 768px) {
-      .container { padding: 0 24px; }
-      .nav-links { display: none; }
-      .hero-right { grid-template-columns: 1fr; }
-      .pillars-grid { grid-template-columns: 1fr; }
-      .pillar { border-right: none; border-bottom: 1px solid var(--border); }
-      .workflow-pipeline { grid-template-columns: repeat(2, 1fr); }
-      .inside-grid { grid-template-columns: 1fr; }
-      .winners-grid { grid-template-columns: repeat(2, 1fr); }
-      .trust-logos { display: none; }
+      .container {
+        padding: 0 24px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero-right {
+        grid-template-columns: 1fr;
+      }
+
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pillar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .workflow-pipeline {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .inside-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .winners-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .trust-logos {
+        display: none;
+      }
     }
 
     @media (max-width: 480px) {
-      .hero-headline { font-size: 60px; }
-      .winners-grid { grid-template-columns: 1fr 1fr; }
-      .workflow-pipeline { grid-template-columns: 1fr; }
+      .hero-headline {
+        font-size: 60px;
+      }
+
+      .winners-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .workflow-pipeline {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -873,15 +988,16 @@
   <!-- ═══════════════════ NAVIGATION ═══════════════════ -->
   <nav class="nav" id="nav">
     <div class="container nav-inner">
-      <a href="/" class="nav-brand">SIGNAL<br>DESK</a>
+      <a href="/" class="nav-brand">
+        <h2>SYGNAL</h2>
+      </a>
       <ul class="nav-links">
-        <li><a href="#pillars">Scan</a></li>
-        <li><a href="#pillars">Rank</a></li>
-        <li><a href="#pillars">Track</a></li>
-        <li><a href="#workflow">Portfolio</a></li>
-        <li><a href="#workflow">Methodology</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#methodology">Methodology</a></li>
+        <li><a href="#performance">Performance</a></li>
+        <li><a href="#faq">FAQ</a></li>
       </ul>
-      <button class="nav-cta" id="navGetStarted">GET STARTED</button>
+      <button class="nav-cta" id="navGetStarted">LOGIN</button>
     </div>
   </nav>
 
@@ -894,7 +1010,7 @@
         <h1 class="hero-headline">
           <span class="line">SCAN.</span>
           <span class="line">TRADE.</span>
-          <span class="line"><span class="learn-line">LEARN.</span></span>
+          <span class="line">L<span class="learn-line">EARN.</span></span>
         </h1>
         <p class="hero-description">
           Machine-learning powered stock research for investors who prefer
@@ -956,126 +1072,292 @@
     </div>
   </div>
 
-  <!-- ═══════════════════ THREE PILLARS ═══════════════════ -->
-  <section class="pillars" id="pillars">
-    <div class="pillars-grid">
-      <div class="pillar">
-        <span class="pillar-index">[ 01 ]</span>
-        <h2 class="pillar-title">SCAN</h2>
-        <p class="pillar-desc">
-          Evaluate NSE stocks against <span class="hl">400+ quantitative factors</span> in real-time.
-          Identify anomalies before the crowd.
-        </p>
-        <div class="pillar-bar"></div>
+  <!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
+  <section class="how-it-works-sec" id="how-it-works" style="border-bottom: 1px solid var(--border); padding: 80px 0;">
+    <div class="container">
+      <div class="workflow-head" style="margin-bottom: 48px;">
+        <div class="section-eyebrow">HOW IT WORKS</div>
+        <h2 class="section-title"
+          style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 4vw, 56px); color: var(--text); margin-top: 4px;">
+          A repeatable process for systematic stock research.</h2>
       </div>
-      <div class="pillar">
-        <span class="pillar-index">[ 02 ]</span>
-        <h2 class="pillar-title">RANK</h2>
-        <p class="pillar-desc">
-          Prioritize assets by machine-learning confidence scores. Move beyond sentiment
-          into <span class="hl">structural probability</span>.
-        </p>
-        <div class="pillar-bar"></div>
+      <div class="pillars-grid"
+        style="display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+        <div class="pillar"
+          style="padding: 48px 32px; border-right: 1px solid var(--border); transition: background 0.2s;">
+          <span class="pillar-index"
+            style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--teal); margin-bottom: 16px; display: block;">[
+            SCAN ]</span>
+          <h2 class="pillar-title"
+            style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 3.5vw, 48px); line-height: 0.92; color: var(--text); margin-bottom: 16px;">
+            SCAN</h2>
+          <p class="pillar-desc" style="font-size: 14px; color: var(--text-secondary); line-height: 1.65;">
+            Evaluate 200+ NSE stocks using a machine-learning pipeline built on technical, momentum, volume and
+            relative-strength factors.
+          </p>
+        </div>
+        <div class="pillar"
+          style="padding: 48px 32px; border-right: 1px solid var(--border); transition: background 0.2s;">
+          <span class="pillar-index"
+            style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--teal); margin-bottom: 16px; display: block;">[
+            RANK ]</span>
+          <h2 class="pillar-title"
+            style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 3.5vw, 48px); line-height: 0.92; color: var(--text); margin-bottom: 16px;">
+            RANK</h2>
+          <p class="pillar-desc" style="font-size: 14px; color: var(--text-secondary); line-height: 1.65;">
+            Assign a confidence score to every opportunity and surface only the highest-probability setups.
+          </p>
+        </div>
+        <div class="pillar" style="padding: 48px 32px; border-right: none; transition: background 0.2s;">
+          <span class="pillar-index"
+            style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--teal); margin-bottom: 16px; display: block;">[
+            TRACK ]</span>
+          <h2 class="pillar-title"
+            style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 3.5vw, 48px); line-height: 0.92; color: var(--text); margin-bottom: 16px;">
+            TRACK</h2>
+          <p class="pillar-desc" style="font-size: 14px; color: var(--text-secondary); line-height: 1.65;">
+            Monitor signal outcomes, maintain a complete research history, and continuously measure model performance.
+          </p>
+        </div>
       </div>
-      <div class="pillar">
-        <span class="pillar-index">[ 03 ]</span>
-        <h2 class="pillar-title">TRACK</h2>
-        <p class="pillar-desc">
-          Monitor portfolio performance against <span class="hl">model predictions</span>.
-          Full historical ledger. Zero guesswork.
-        </p>
-        <div class="pillar-bar"></div>
-      </div>
+      <p
+        style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text-secondary); margin-top: 32px; font-weight: 500;">
+        Every signal follows the same rules-based process, removing emotional decision making from research.
+      </p>
     </div>
   </section>
 
   <!-- ═══════════════════ METHODOLOGY ═══════════════════ -->
-  <section class="workflow" id="workflow">
-    <div class="container">
-      <div class="workflow-head">
-        <div class="section-eyebrow">How It Works</div>
-        <h2 class="section-title">THE RESEARCH PIPELINE</h2>
+  <section class="methodology-sec" id="methodology" style="border-bottom: 1px solid var(--border); padding: 80px 0;">
+    <div class="container" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 64px;">
+      <div>
+        <div class="section-eyebrow">METHODOLOGY</div>
+        <h2 class="section-title"
+          style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 4vw, 56px); color: var(--text); margin-top: 4px; line-height: 1.05;">
+          How the model generates research signals.</h2>
+        <p
+          style="font-size: 15px; color: var(--text-secondary); line-height: 1.65; margin-top: 24px; font-weight: 500;">
+          Sygnal uses a supervised machine-learning framework trained on historical market data.
+        </p>
+        <div
+          style="margin-top: 40px; padding: 20px; border-left: 2px solid var(--teal); background: rgba(15,118,110,0.03);">
+          <p
+            style="font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--teal); margin-bottom: 6px;">
+            Disclaimer</p>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; font-style: italic;">
+            Sygnal is a research platform and not financial advice.
+          </p>
+        </div>
       </div>
-      <div class="workflow-pipeline">
-        <div class="workflow-step">
-          <div class="workflow-num">01 / INGEST</div>
-          <div class="workflow-step-title">MARKET DATA</div>
-          <div class="workflow-step-sub">NSE Price + Volume</div>
-        </div>
-        <div class="workflow-step">
-          <div class="workflow-num">02 / PROCESS</div>
-          <div class="workflow-step-title">FACTOR ENGINE</div>
-          <div class="workflow-step-sub">400+ Signals</div>
-        </div>
-        <div class="workflow-step">
-          <div class="workflow-num">03 / SCORE</div>
-          <div class="workflow-step-title">ML RANKING</div>
-          <div class="workflow-step-sub">Confidence Score</div>
-        </div>
-        <div class="workflow-step">
-          <div class="workflow-num">04 / SCAN</div>
-          <div class="workflow-step-title">SIGNAL DESK</div>
-          <div class="workflow-step-sub">Research Console</div>
-        </div>
-        <div class="workflow-step">
-          <div class="workflow-num">05 / TRACK</div>
-          <div class="workflow-step-title">PORTFOLIO LOG</div>
-          <div class="workflow-step-sub">Historical Ledger</div>
-        </div>
+      <div
+        style="border-left: 1px solid var(--border); padding-left: 64px; display: flex; flex-direction: column; justify-content: center;">
+        <p style="font-size: 15px; color: var(--text-secondary); font-weight: 600; margin-bottom: 20px;">The model
+          evaluates:</p>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li
+            style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 6px; height: 6px; background: var(--teal); display: inline-block;"></span>
+            Price Momentum
+          </li>
+          <li
+            style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 6px; height: 6px; background: var(--teal); display: inline-block;"></span>
+            Relative Strength
+          </li>
+          <li
+            style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 6px; height: 6px; background: var(--teal); display: inline-block;"></span>
+            Volume Behaviour
+          </li>
+          <li
+            style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 6px; height: 6px; background: var(--teal); display: inline-block;"></span>
+            Trend Persistence
+          </li>
+          <li
+            style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 6px; height: 6px; background: var(--teal); display: inline-block;"></span>
+            Market Regime Signals
+          </li>
+          <li
+            style="font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 6px; height: 6px; background: var(--teal); display: inline-block;"></span>
+            Technical Indicators
+          </li>
+        </ul>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-top: 32px; font-weight: 500;">
+          Every signal is generated using the same rules-based process, ensuring consistency and reducing discretionary
+          bias.
+        </p>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════ INSIDE SIGNAL DESK ═══════════════════ -->
-  <section class="inside" id="inside">
+  <!-- ═══════════════════ PERFORMANCE ═══════════════════ -->
+  <section class="performance-sec" id="performance" style="border-bottom: 1px solid var(--border); padding: 80px 0;">
     <div class="container">
-      <div class="inside-head">
-        <div class="section-eyebrow">Inside Signal Desk</div>
-        <h2 class="section-title">THE RESEARCH TERMINAL</h2>
+      <div class="workflow-head" style="margin-bottom: 48px;">
+        <div class="section-eyebrow">PERFORMANCE</div>
+        <h2 class="section-title"
+          style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 4vw, 56px); color: var(--text); margin-top: 4px;">
+          Historical model statistics.</h2>
       </div>
-      <div class="inside-grid">
-
-        <!-- Main dark card -->
-        <div class="inside-card inside-card-dark">
-          <div class="inside-card-inner">
-            <div class="inside-card-tag light">Dashboard</div>
-            <div class="inside-card-title light">SIGNALS CONSOLE</div>
+      <div class="winners-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+        <div class="winner-card"
+          style="background: var(--surface); border: 1px solid var(--border); padding: 36px 28px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;">
+          <div style="font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--teal); line-height: 1;">29.4%
           </div>
-          <div class="mock-chart-area">
-            <div class="mock-bars">
-              <div class="mock-bar" style="height:40%"></div>
-              <div class="mock-bar" style="height:55%"></div>
-              <div class="mock-bar" style="height:35%"></div>
-              <div class="mock-bar" style="height:70%"></div>
-              <div class="mock-bar" style="height:60%"></div>
-              <div class="mock-bar" style="height:80%"></div>
-              <div class="mock-bar" style="height:65%"></div>
-              <div class="mock-bar" style="height:90%"></div>
-              <div class="mock-bar" style="height:75%"></div>
-              <div class="mock-bar" style="height:85%"></div>
+          <div
+            style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary);">
+            Backtested Return</div>
+        </div>
+        <div class="winner-card"
+          style="background: var(--surface); border: 1px solid var(--border); padding: 36px 28px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;">
+          <div style="font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--teal); line-height: 1;">71.4%
+          </div>
+          <div
+            style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary);">
+            Prediction Accuracy</div>
+        </div>
+        <div class="winner-card"
+          style="background: var(--surface); border: 1px solid var(--border); padding: 36px 28px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;">
+          <div style="font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--teal); line-height: 1;">200+
+          </div>
+          <div
+            style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary);">
+            Stocks Screened Daily</div>
+        </div>
+        <div class="winner-card"
+          style="background: var(--surface); border: 1px solid var(--border); padding: 36px 28px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;">
+          <div style="font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: var(--teal); line-height: 1.1;">
+            Rules-Based</div>
+          <div
+            style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary);">
+            Research Process</div>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 32px; font-style: italic;">
+        All results are generated using historical simulations and should not be interpreted as guarantees of future
+        performance.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FAQ ═══════════════════ -->
+  <section class="faq-sec" id="faq" style="border-bottom: 1px solid var(--border); padding: 80px 0;">
+    <div class="container">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div class="workflow-head" style="margin-bottom: 48px; text-align: left;">
+          <div class="section-eyebrow">FAQ</div>
+          <h2 class="section-title"
+            style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 4vw, 56px); color: var(--text); margin-top: 4px;">
+            Common questions about Sygnal.</h2>
+        </div>
+
+        <div class="faq-accordion" style="display: flex; flex-direction: column; gap: 24px; margin-top: 32px;">
+          <!-- FAQ Item 1 -->
+          <div class="faq-item" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <button class="faq-trigger"
+              style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 12px 0; text-align: left; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; outline: none; transition: color 0.2s;">
+              <span>Is this financial advice?</span>
+              <span class="faq-icon"
+                style="font-size: 20px; font-weight: 400; color: var(--text-secondary); transition: transform 0.3s; margin-left: 16px;">+</span>
+            </button>
+            <div class="faq-content"
+              style="max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, padding 0.35s ease-out; padding-top: 0;">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px;">
+                No. Sygnal is a research platform designed to support investment research and decision making. All
+                signals are generated systematically and should be treated as research rather than investment advice.
+              </p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 2 -->
+          <div class="faq-item" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <button class="faq-trigger"
+              style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 12px 0; text-align: left; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; outline: none; transition: color 0.2s;">
+              <span>How often are signals generated?</span>
+              <span class="faq-icon"
+                style="font-size: 20px; font-weight: 400; color: var(--text-secondary); transition: transform 0.3s; margin-left: 16px;">+</span>
+            </button>
+            <div class="faq-content"
+              style="max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, padding 0.35s ease-out; padding-top: 0;">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px;">
+                The model can be run daily and evaluates the entire stock universe during each scan.
+              </p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 3 -->
+          <div class="faq-item" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <button class="faq-trigger"
+              style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 12px 0; text-align: left; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; outline: none; transition: color 0.2s;">
+              <span>What stocks are covered?</span>
+              <span class="faq-icon"
+                style="font-size: 20px; font-weight: 400; color: var(--text-secondary); transition: transform 0.3s; margin-left: 16px;">+</span>
+            </button>
+            <div class="faq-content"
+              style="max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, padding 0.35s ease-out; padding-top: 0;">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px;">
+                Sygnal focuses on liquid NSE-listed equities.
+              </p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 4 -->
+          <div class="faq-item" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <button class="faq-trigger"
+              style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 12px 0; text-align: left; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; outline: none; transition: color 0.2s;">
+              <span>Can I paper trade the signals?</span>
+              <span class="faq-icon"
+                style="font-size: 20px; font-weight: 400; color: var(--text-secondary); transition: transform 0.3s; margin-left: 16px;">+</span>
+            </button>
+            <div class="faq-content"
+              style="max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, padding 0.35s ease-out; padding-top: 0;">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px;">
+                Yes. The dashboard includes signal tracking, trade monitoring and historical performance analysis.
+              </p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 5 -->
+          <div class="faq-item" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <button class="faq-trigger"
+              style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 12px 0; text-align: left; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; outline: none; transition: color 0.2s;">
+              <span>How are rankings generated?</span>
+              <span class="faq-icon"
+                style="font-size: 20px; font-weight: 400; color: var(--text-secondary); transition: transform 0.3s; margin-left: 16px;">+</span>
+            </button>
+            <div class="faq-content"
+              style="max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, padding 0.35s ease-out; padding-top: 0;">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px;">
+                Rankings are generated by a machine-learning model trained on historical market behaviour and evaluated
+                using a consistent rules-based process.
+              </p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 6 -->
+          <div class="faq-item" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <button class="faq-trigger"
+              style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 12px 0; text-align: left; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; outline: none; transition: color 0.2s;">
+              <span>Do you guarantee future returns?</span>
+              <span class="faq-icon"
+                style="font-size: 20px; font-weight: 400; color: var(--text-secondary); transition: transform 0.3s; margin-left: 16px;">+</span>
+            </button>
+            <div class="faq-content"
+              style="max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, padding 0.35s ease-out; padding-top: 0;">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px;">
+                No. Historical performance does not guarantee future results. Markets change constantly and every
+                investment decision involves risk.
+              </p>
             </div>
           </div>
         </div>
-
-        <!-- Right stack -->
-        <div class="inside-right">
-          <div class="inside-mini inside-mini-teal">
-            <div class="inside-card-tag">terminal</div>
-            <div class="inside-card-title light">SIGNALS<br>CONSOLE</div>
-          </div>
-          <div class="inside-mini">
-            <div class="inside-card-tag dark">Research</div>
-            <div class="inside-card-title dark">SIGNAL HISTORY</div>
-          </div>
-          <div class="inside-mini">
-            <div class="inside-card-tag dark">Portfolio</div>
-            <div class="inside-card-title dark">PAPER TRADING<br>JOURNAL</div>
-          </div>
-        </div>
-
       </div>
     </div>
   </section>
+
 
   <!-- ═══════════════════ FINAL CTA ═══════════════════ -->
   <section class="final-cta" id="cta">
@@ -1109,16 +1391,17 @@
   <footer class="site-footer">
     <div class="container">
       <div class="footer-inner">
-        <div class="footer-brand-text">SIGNAL DESK</div>
+        <div class="footer-brand-text">SYGNAL</div>
         <ul class="footer-links-list">
-          <li><a href="#pillars">Features</a></li>
-          <li><a href="#workflow">Methodology</a></li>
-          <li><a href="#">Disclaimer</a></li>
-          <li><a href="#">Privacy</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#methodology">Methodology</a></li>
+          <li><a href="#performance">Performance</a></li>
+          <li><a href="#faq">FAQ</a></li>
         </ul>
       </div>
       <div class="footer-copy">
-        &copy; 2026 Signal Desk. All rights reserved. For paper-trading and research evaluation purposes only. Built for NSE equities.
+        &copy; 2026 Sygnal. All rights reserved. For paper-trading and research evaluation purposes only. Built for
+        NSE equities.
       </div>
     </div>
   </footer>
@@ -1126,10 +1409,71 @@
   <!-- ═══════════════════ LOADING OVERLAY ═══════════════════ -->
   <div id="loadingOverlay" class="hidden">
     <div class="spinner"></div>
-    <p style="font-family:'Inter',sans-serif; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#555;">
+    <p
+      style="font-family:'Inter',sans-serif; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#555;">
       Syncing Authentication...
     </p>
   </div>
+
+  <!-- ═══════════════════ FAQ ACCORDION INTERACTIVITY ═══════════════════ -->
+  <script>
+    (function () {
+      const triggers = document.querySelectorAll('.faq-trigger');
+
+      triggers.forEach(trigger => {
+        // Hover effects matching design system requirements
+        trigger.addEventListener('mouseenter', () => {
+          trigger.style.color = 'var(--teal)';
+          const icon = trigger.querySelector('.faq-icon');
+          if (icon) icon.style.color = 'var(--teal)';
+        });
+        trigger.addEventListener('mouseleave', () => {
+          if (!trigger.parentElement.classList.contains('active')) {
+            trigger.style.color = 'var(--text)';
+            const icon = trigger.querySelector('.faq-icon');
+            if (icon) icon.style.color = 'var(--text-secondary)';
+          }
+        });
+
+        trigger.addEventListener('click', () => {
+          const item = trigger.parentElement;
+          const content = item.querySelector('.faq-content');
+          const icon = trigger.querySelector('.faq-icon');
+          const isActive = item.classList.contains('active');
+
+          // Close all other open items
+          document.querySelectorAll('.faq-item').forEach(otherItem => {
+            if (otherItem !== item && otherItem.classList.contains('active')) {
+              otherItem.classList.remove('active');
+              const otherContent = otherItem.querySelector('.faq-content');
+              const otherIcon = otherItem.querySelector('.faq-trigger .faq-icon');
+              const otherTrigger = otherItem.querySelector('.faq-trigger');
+
+              otherContent.style.maxHeight = '0';
+              if (otherIcon) otherIcon.textContent = '+';
+              otherTrigger.style.color = 'var(--text)';
+              if (otherIcon) otherIcon.style.color = 'var(--text-secondary)';
+            }
+          });
+
+          // Toggle current item
+          if (isActive) {
+            item.classList.remove('active');
+            content.style.maxHeight = '0';
+            if (icon) icon.textContent = '+';
+            trigger.style.color = 'var(--text)';
+            if (icon) icon.style.color = 'var(--text-secondary)';
+          } else {
+            item.classList.add('active');
+            content.style.maxHeight = content.scrollHeight + 'px';
+            if (icon) icon.textContent = '−';
+            trigger.style.color = 'var(--teal)';
+            if (icon) icon.style.color = 'var(--teal)';
+          }
+        });
+      });
+    })();
+  </script>
 
   <!-- ═══════════════════ CANDLESTICK CHART ═══════════════════ -->
   <script>
@@ -1141,7 +1485,7 @@
       // Responsive sizing — fills parent, no padding
       function resizeCanvas() {
         const wrap = canvas.parentElement;
-        canvas.width  = wrap.clientWidth;
+        canvas.width = wrap.clientWidth;
         canvas.height = 360;
       }
       resizeCanvas();
@@ -1225,8 +1569,8 @@
       const maxV = Math.max(...allVals);
       const range = maxV - minV;
 
-      const BULL  = '#0F766E';
-      const BEAR  = '#2A2A2A';
+      const BULL = '#0F766E';
+      const BEAR = '#2A2A2A';
 
       let progress = 0;
       let animFrame;
@@ -1249,7 +1593,7 @@
         }
 
         const candleW = W / N;
-        const bodyW   = Math.max(4, candleW * 0.55);
+        const bodyW = Math.max(4, candleW * 0.55);
         const visibleCount = Math.max(1, Math.round(prog * N));
 
         // 1. Draw Dotted Gridlines in background (no shadows)
@@ -1319,22 +1663,22 @@
         for (let i = 0; i < visibleCount; i++) {
           const c = candles[i];
           const isBull = c.close >= c.open;
-          const color  = isBull ? BULL : BEAR;
+          const color = isBull ? BULL : BEAR;
           const cx = i * candleW + candleW / 2;
 
-          const highY  = toY(c.high);
-          const lowY   = toY(c.low);
-          const openY  = toY(c.open);
+          const highY = toY(c.high);
+          const lowY = toY(c.low);
+          const openY = toY(c.open);
           const closeY = toY(c.close);
 
           // Fade-in last candle for smooth animation
-          const frac  = prog * N - Math.floor(prog * N);
+          const frac = prog * N - Math.floor(prog * N);
           const alpha = (i === visibleCount - 1 && prog < 1) ? frac : 1;
           ctx.globalAlpha = alpha;
 
           // Wick
           ctx.strokeStyle = color;
-          ctx.lineWidth   = 1.5;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.moveTo(cx, highY);
           ctx.lineTo(cx, lowY);
@@ -1342,7 +1686,7 @@
 
           // Body
           const bodyTop = Math.min(openY, closeY);
-          const bodyH   = Math.max(2.5, Math.abs(closeY - openY));
+          const bodyH = Math.max(2.5, Math.abs(closeY - openY));
           ctx.fillStyle = color;
           ctx.fillRect(cx - bodyW / 2, bodyTop, bodyW, bodyH);
         }
@@ -1380,8 +1724,8 @@
       if (floatEl) {
         floatEl.addEventListener('mousemove', (e) => {
           const rect = floatEl.getBoundingClientRect();
-          const rx = ((e.clientY - rect.top  - rect.height / 2) / rect.height) * -4;
-          const ry = ((e.clientX - rect.left - rect.width  / 2) / rect.width ) *  4;
+          const rx = ((e.clientY - rect.top - rect.height / 2) / rect.height) * -4;
+          const ry = ((e.clientX - rect.left - rect.width / 2) / rect.width) * 4;
           floatEl.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
           floatEl.style.transition = 'transform 0.08s ease';
         });
@@ -1399,7 +1743,7 @@
   <script>
     (function () {
       const statDefs = [
-        { id: 'statReturns',  target: 29.4, decimals: 1 },
+        { id: 'statReturns', target: 29.4, decimals: 1 },
         { id: 'statAccuracy', target: 71.4, decimals: 1 }
       ];
 
@@ -1435,7 +1779,7 @@
 
   <!-- ═══════════════════ FIREBASE AUTH ═══════════════════ -->
   <script type="module">
-    import { auth, provider, signInWithPopup, onAuthStateChanged } from '/static/auth.js';
+    import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from '/static/auth.js';
 
     const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -1460,17 +1804,48 @@
 
     const triggerLogin = async () => {
       if (window.currentUser) {
-        window.location.href = '/dashboard';
+        // Re-verify approval for already-signed-in users
+        const token = await window.currentUser.getIdToken(true);
+        const check = await fetch('/api/status', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (check.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          await signOut(auth);
+          window.currentUser = null;
+          alert('Access not approved. Contact the administrator.');
+        }
         return;
       }
 
       loadingOverlay.classList.remove('hidden');
 
       try {
-        await signInWithPopup(auth, provider);
-        window.location.href = '/dashboard';
+        const result = await signInWithPopup(auth, provider);
+        // ── Whitelist gate ──────────────────────────────────────────────
+        // Check approval BEFORE allowing dashboard access.
+        const token = await result.user.getIdToken();
+        const check = await fetch('/api/status', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (check.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          // Not approved — sign out immediately, never reach dashboard
+          await signOut(auth);
+          loadingOverlay.classList.add('hidden');
+          const body = await check.json().catch(() => ({}));
+          alert('Access not approved: ' + (body.message || 'Your account is not on the approved list. Contact the administrator.'));
+        }
       } catch (error) {
         loadingOverlay.classList.add('hidden');
+
+        if (error.code === 'auth/popup-closed-by-user' ||
+          error.code === 'auth/cancelled-popup-request') {
+          return;
+        }
+
         console.error("Login failed:", error);
         alert("Login failed: " + error.message);
       }
@@ -1489,6 +1864,11 @@
     document.getElementById('heroStartBtn').addEventListener('click', (e) => {
       e.preventDefault();
       triggerLogin();
+    });
+  </script>
+  <script>
+    window.addEventListener('load', () => {
+      window.scrollTo(0, 0);
     });
   </script>
 
