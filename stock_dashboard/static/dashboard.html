@@ -1592,7 +1592,37 @@
       document.getElementById('stat-worst-tick').textContent = worstRow ? worstRow.ticker : '—';
     }
 
-    // ── Populate Active Trades from pending history rows ───────────────────────
+
+
+    // ── Load history (drives History + Active + Stats workspaces) ──────────────
+    async function loadHistory() {
+      try {
+        const r = await fetchWithAuth('/api/history');
+        const data = await r.json();
+        console.log('[INIT] loadHistory response', data);
+        const rows = data.history || [];
+
+        // Normalize and sort newest first (scanDate desc, scanTime desc)
+        const normalized = rows.map(normalizeRow);
+        normalized.sort(compareDateTime);
+
+        _historyRows = normalized;
+        document.getElementById('hist-meta').textContent = `${rows.length} total signals logged`;
+
+        // Stuck trades check
+        const stuckTrades = normalized.filter(t => t.status === 'OPEN' && t.holdingDays > 7);
+        if (stuckTrades.length > 0) {
+          console.warn(`[Data Validation] Found ${stuckTrades.length} stuck trade(s) (Open but > 7 calendar days / 5 trading days old):`, stuckTrades);
+        }
+
+        filterHistory();
+        renderActiveTrades(normalized);
+        computeStats(normalized);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('history-box').innerHTML = `<div class="empty"><div class="empty-t">Could not load history</div></div>`;
+      }
+    }
     function renderActiveTrades(rows) {
       const pending = rows.filter(r => r.status === 'OPEN');
 
@@ -1640,34 +1670,53 @@
       document.getElementById('active-box').innerHTML = html;
     }
 
-    // ── Load history (drives History + Active + Stats workspaces) ──────────────
-    async function loadHistory() {
+
+    // ── Load active trades from Supabase ──────────────────────────────────────
+    async function loadActiveTrades() {
       try {
-        const r = await fetchWithAuth('/api/history');
-        const data = await r.json();
-        const rows = data.history || [];
-
-        // Normalize and sort newest first (scanDate desc, scanTime desc)
-        const normalized = rows.map(normalizeRow);
-        normalized.sort(compareDateTime);
-
-        _historyRows = normalized;
-        document.getElementById('hist-meta').textContent = `${rows.length} total signals logged`;
-
-        // Stuck trades check
-        const stuckTrades = normalized.filter(t => t.status === 'OPEN' && t.holdingDays > 7);
-        if (stuckTrades.length > 0) {
-          console.warn(`[Data Validation] Found ${stuckTrades.length} stuck trade(s) (Open but > 7 calendar days / 5 trading days old):`, stuckTrades);
+        const r = await fetchWithAuth('/api/active_trades');
+        if (!r.ok) {
+          console.warn('[Active Trades] API returned', r.status);
+          return;
         }
+        const data = await r.json();
+        const trades = data.trades || [];
 
-        filterHistory();
+        // Map Supabase fields → shape expected by renderActiveTrades()
+        const now = Date.now();
+        console.log('[INIT] loadActiveTrades response', trades);
+        const normalized = trades.map(t => {
+          const entryDateStr = t.entry_date
+            ? String(t.entry_date).substring(0, 10)
+            : '';
+          const holdingDays = entryDateStr
+            ? Math.max(0, Math.floor((now - new Date(entryDateStr).getTime()) / 86400000))
+            : 0;
+          // confidence stored as 0-1 float in Supabase, renderActiveTrades expects 0-100
+          const confidence = t.confidence != null
+            ? (t.confidence <= 1 ? t.confidence * 100 : t.confidence)
+            : 0;
+          return {
+            scanDate: entryDateStr,
+            scanTime: '',
+            ticker: t.ticker || '—',
+            confidence: confidence,
+            entryPrice: t.entry_price != null ? Number(t.entry_price) : null,
+            exitPrice: null,
+            netReturn: null,
+            outcome: 'Pending',
+            status: 'OPEN',
+            holdingDays: holdingDays,
+            raw: t
+          };
+        });
+
         renderActiveTrades(normalized);
-        computeStats(normalized);
       } catch (e) {
-        console.error(e);
-        document.getElementById('history-box').innerHTML = `<div class="empty"><div class="empty-t">Could not load history</div></div>`;
+        console.error('[Active Trades] Failed to load:', e);
       }
     }
+
 
     // ── Run scan ───────────────────────────────────────────────────────────────
     window.runScan = async function () {
@@ -1694,6 +1743,7 @@
         }
         renderSignals(data);
         loadHistory();
+        loadActiveTrades();
       } catch (e) {
         document.getElementById('signals-box').innerHTML = `<div class="empty"><div class="empty-t">Connection lost</div><div class="empty-s">${e.message}</div></div>`;
       } finally {
@@ -1736,7 +1786,7 @@
 
     // ── Init (called after auth with pre-fetched status data) ──────────────────
     async function init(statusData) {
-      // Use the status data already fetched and verified by the auth gate
+      console.log('[INIT] status received');
       const dot = document.getElementById('dot');
       const txt = document.getElementById('status-text');
       if (statusData && statusData.model_loaded) {
@@ -1748,28 +1798,10 @@
       if (statusData && statusData.last_scan_time) {
         document.getElementById('last-date').textContent = `Last: ${statusData.last_scan_time}`;
       }
-
-      try {
-        const r = await fetchWithAuth('/api/last_scan');
-        const data = await r.json();
-        if (data.signals && data.signals.length >= 0 && data.processed) {
-          renderSignals(data);
-        } else {
-          document.getElementById('signals-box').innerHTML = `
-          <div class="empty">
-            <div class="empty-t">Ready to scan</div>
-            <div class="empty-s">Click "Run Scanner" to find today's signals</div>
-          </div>`;
-        }
-      } catch (e) {
-        document.getElementById('signals-box').innerHTML = `
-        <div class="empty">
-          <div class="empty-t">Ready to scan</div>
-          <div class="empty-s">Click "Run Scanner" to begin</div>
-        </div>`;
-      }
-
+      console.log('[INIT] entering loadHistory');
       loadHistory();
+      console.log('[INIT] entering loadActiveTrades');
+      loadActiveTrades();
     }
 
     // ── Theme ──────────────────────────────────────────────────────────────────

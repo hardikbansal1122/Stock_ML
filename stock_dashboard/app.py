@@ -15,7 +15,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import pickle, os, json, subprocess, sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -340,13 +340,43 @@ def api_sync_user():
 
 
 @app.route('/api/scan')
-@require_admin
+@require_auth   
 def api_scan():
     threshold = float(request.args.get('threshold', 0.60))
     result = run_scanner(threshold=threshold)
     if 'signals' in result and result['signals']:
         log_signals_to_excel(result['signals'])
         result['excel_saved'] = True
+
+    uid = request.user.get('uid')
+
+    if supabase and uid:
+        for sig in result['signals']:
+
+            ticker = sig.get('ticker')
+
+            dup = (
+                supabase
+                .table('trades')
+                .select('id')
+                .eq('uid', uid)
+                .eq('ticker', ticker)
+                .eq('status', 'OPEN')
+                .execute()
+            )
+
+            if dup.data:
+                continue
+
+            supabase.table('trades').insert({
+                'uid': uid,
+                'ticker': ticker,
+                'confidence': sig.get('confidence'),
+                'entry_price': sig.get('close'),
+                'entry_date': datetime.now(timezone.utc).isoformat(),
+                'status': 'OPEN'
+            }).execute()
+            print(f"Inserted trade: {ticker} for {uid}")
     save_last_scan(result)
     return jsonify(result)
 
@@ -357,7 +387,7 @@ def api_last_scan():
     return jsonify(data) if data else jsonify({'signals':[],'processed':0,'total':len(NIFTY_TICKERS)})
 
 @app.route('/api/resolve')
-@require_admin
+@require_auth
 def api_resolve():
     resolved = auto_resolve_trades()
     return jsonify({'resolved_count':len(resolved),'resolved':resolved})
@@ -419,6 +449,37 @@ def api_status():
                     'last_signals':len(last.get('signals',[])) if last else 0,
                     'is_admin': is_admin})
 
+@app.route('/api/active_trades')
+@require_auth
+def api_active_trades():
+
+    uid = uid = request.user.get('uid')
+
+    if not supabase:
+        return jsonify({'trades': []})
+
+    try:
+        response = (
+            supabase
+            .table('trades')
+            .select('*')
+            .eq('uid', uid)
+            .eq('status', 'OPEN')
+            .order('entry_date', desc=True)
+            .execute()
+        )
+
+        return jsonify({
+            'trades': response.data or []
+        })
+
+    except Exception as e:
+        return jsonify({
+            'trades': [],
+            'error': str(e)
+        }), 500
+        
+
 if __name__ == '__main__':
     init_excel()
     print("="*60)
@@ -430,3 +491,4 @@ if __name__ == '__main__':
     print(f"\n Open: http://localhost:5000")
     print("="*60)
     app.run(host='0.0.0.0', port=5000, debug=False)
+
