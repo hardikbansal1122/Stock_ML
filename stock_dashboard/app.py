@@ -26,8 +26,6 @@ import numpy as np
 import pickle, os, json, subprocess, sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from openpyxl import load_workbook, Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -37,7 +35,6 @@ BASE_DIR       = Path(__file__).parent
 MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
-EXCEL_PATH     = BASE_DIR / 'paper_trading_log.xlsx'
 LAST_SCAN_PATH = BASE_DIR / 'last_scan.json'
 
 # ── Load model ────────────────────────────────────────────────────────────
@@ -141,136 +138,80 @@ def get_current_price(ticker):
         except: continue
     return None
 
-# ── Excel helpers ─────────────────────────────────────────────────────────
-def init_excel():
-    if EXCEL_PATH.exists(): return
-    wb = Workbook()
-    ws1 = wb.active
-    ws1.title = "Signals Log"
-    headers = ["Scan Date","Time","Ticker","Confidence%","Entry Price",
-               "RSI","Vol Ratio","5d Momentum%","Target Exit Date",
-               "Exit Price","Return%","Outcome","Notes"]
-    for col, h in enumerate(headers, 1):
-        c = ws1.cell(row=1, column=col, value=h)
-        c.font = Font(bold=True, color="FFFFFF")
-        c.fill = PatternFill("solid", fgColor="1A1A1A")
-        c.alignment = Alignment(horizontal="center")
-    for i, w in enumerate([12,10,12,13,13,8,10,14,16,13,10,10,30], 1):
-        ws1.column_dimensions[chr(64+i)].width = w
 
-    ws2 = wb.create_sheet("Daily Summary")
-    for col, h in enumerate(["Date","Signals","Avg Conf%","Top Pick","Top Conf%"], 1):
-        c = ws2.cell(row=1, column=col, value=h)
-        c.font = Font(bold=True, color="FFFFFF")
-        c.fill = PatternFill("solid", fgColor="1A1A1A")
-        c.alignment = Alignment(horizontal="center")
-
-    ws3 = wb.create_sheet("Performance")
-    for col, h in enumerate(["Metric","Value"], 1):
-        c = ws3.cell(row=1, column=col, value=h)
-        c.font = Font(bold=True, color="FFFFFF")
-        c.fill = PatternFill("solid", fgColor="1A1A1A")
-    for i, m in enumerate(["Total Signals","Resolved","Wins","Losses",
-                            "Win Rate%","Avg Return%","Best%","Worst%"], 2):
-        ws3.cell(row=i, column=1, value=m).font = Font(bold=True)
-        ws3.cell(row=i, column=2, value="—")
-    wb.save(EXCEL_PATH)
-
-def log_signals_to_excel(signals):
-    init_excel()
-    wb   = load_workbook(EXCEL_PATH)
-    ws   = wb["Signals Log"]
-    now  = datetime.now()
-    exit_date = (now + timedelta(days=7)).strftime("%Y-%m-%d")
-    row  = ws.max_row + 1
-    for s in signals:
-        conf = round(s['confidence']*100, 1)
-        data = [now.strftime("%Y-%m-%d"), now.strftime("%H:%M"),
-                s['ticker'], conf, round(s['close'],2),
-                round(s['rsi'],0), round(s['volume_ratio'],2),
-                round(s['momentum_5d'],2), exit_date,
-                "", "", "Pending", ""]
-        for col, val in enumerate(data, 1):
-            cell = ws.cell(row=row, column=col, value=val)
-            cell.alignment = Alignment(horizontal="center")
-            if col == 4:
-                color = "22C55E" if conf>=70 else "84CC16" if conf>=65 else "EAB308"
-                cell.fill = PatternFill("solid", fgColor=color)
-                cell.font = Font(bold=True, color="FFFFFF")
-        row += 1
-
-    ws2 = wb["Daily Summary"]
-    nr  = ws2.max_row + 1
-    if signals:
-        avg = sum(s['confidence'] for s in signals)/len(signals)*100
-        top = max(signals, key=lambda x: x['confidence'])
-        r2  = [now.strftime("%Y-%m-%d"), len(signals), round(avg,1),
-               top['ticker'], round(top['confidence']*100,1)]
-    else:
-        r2 = [now.strftime("%Y-%m-%d"), 0, 0, "None", 0]
-    for col, val in enumerate(r2, 1):
-        ws2.cell(row=nr, column=col, value=val).alignment = Alignment(horizontal="center")
-    wb.save(EXCEL_PATH)
 
 def auto_resolve_trades():
-    """Auto-fill exit price + return for trades that are 7+ calendar days old."""
-    if not EXCEL_PATH.exists(): return []
-    init_excel()
-    wb   = load_workbook(EXCEL_PATH)
-    ws   = wb["Signals Log"]
-    today = datetime.now().date()
+
+    if not supabase:
+        return []
+
     resolved = []
 
-    for row in range(2, ws.max_row + 1):
-        if ws.cell(row=row, column=12).value != "Pending": continue
-        try:
-            scan_date = datetime.strptime(
-                str(ws.cell(row=row, column=1).value)[:10], "%Y-%m-%d").date()
-        except: continue
+    try:
 
-        if (today - scan_date).days < 7: continue
+        open_trades = (
+            supabase
+            .table('trades')
+            .select('*')
+            .eq('status', 'OPEN')
+            .execute()
+        )
 
-        ticker      = str(ws.cell(row=row, column=3).value)
-        entry_price = ws.cell(row=row, column=5).value
-        if not entry_price: continue
+        for trade in open_trades.data or []:
 
-        exit_price = get_current_price(ticker)
-        if not exit_price: continue
+            try:
+                entry_date = datetime.fromisoformat(
+                    trade['entry_date'].replace('Z', '+00:00')
+                ).date()
+            except:
+                continue
 
-        net_ret = round((exit_price - float(entry_price)) / float(entry_price) * 100, 2)
-        outcome = "Win ✅" if net_ret > 0 else "Loss ❌"
+            today = datetime.now(timezone.utc).date()
 
-        ws.cell(row=row, column=10).value = round(exit_price, 2)
-        ws.cell(row=row, column=11).value = net_ret
-        out = ws.cell(row=row, column=12)
-        out.value = outcome
-        out.fill  = PatternFill("solid", fgColor="22C55E" if net_ret>0 else "EF4444")
-        out.font  = Font(bold=True, color="FFFFFF")
-        resolved.append({'ticker':ticker,'entry':float(entry_price),
-                         'exit':exit_price,'return':net_ret,'outcome':outcome})
+            # Same rule as before (7 calendar days)
+            if (today - entry_date).days < 7:
+                continue
 
-    if resolved:
-        # Update performance sheet
-        ws3 = wb["Performance"]
-        returns, wins, losses = [], 0, 0
-        for row in range(2, ws.max_row+1):
-            outcome = str(ws.cell(row=row, column=12).value)
-            ret_val = ws.cell(row=row, column=11).value
-            if "Win" in outcome and ret_val:
-                wins += 1; returns.append(float(ret_val))
-            elif "Loss" in outcome and ret_val:
-                losses += 1; returns.append(float(ret_val))
-        total = wins+losses
-        vals  = [ws.max_row-1, total, wins, losses,
-                 round(wins/total*100,1) if total else 0,
-                 round(sum(returns)/len(returns),2) if returns else 0,
-                 round(max(returns),2) if returns else 0,
-                 round(min(returns),2) if returns else 0]
-        for i, v in enumerate(vals, 2):
-            ws3.cell(row=i, column=2, value=v)
-        wb.save(EXCEL_PATH)
-    elif ws.max_row > 1:
-        wb.save(EXCEL_PATH)
+            ticker = trade['ticker']
+            entry_price = trade['entry_price']
+
+            if not entry_price:
+                continue
+
+            exit_price = get_current_price(ticker)
+
+            if not exit_price:
+                continue
+
+            return_pct = round(
+                ((float(exit_price) - float(entry_price))
+                 / float(entry_price)) * 100,
+                2
+            )
+
+            (
+                supabase
+                .table('trades')
+                .update({
+                    'exit_price': round(exit_price, 2),
+                    'exit_date': datetime.now(timezone.utc).isoformat(),
+                    'return_pct': return_pct,
+                    'status': 'CLOSED'
+                })
+                .eq('id', trade['id'])
+                .execute()
+            )
+
+            resolved.append({
+                'ticker': ticker,
+                'entry': float(entry_price),
+                'exit': round(exit_price, 2),
+                'return': return_pct,
+                'outcome': 'Win' if return_pct > 0 else 'Loss'
+            })
+
+    except Exception as e:
+        print("AUTO RESOLVE ERROR:", e)
 
     return resolved
 
@@ -357,10 +298,7 @@ def api_scan():
     # Run scanner
     result = run_scanner(threshold=threshold)
 
-    # Keep Excel for now (we'll remove it later)
-    if 'signals' in result and result['signals']:
-        log_signals_to_excel(result['signals'])
-        result['excel_saved'] = True
+    
 
     # Current authenticated user
     uid = request.user.get('uid')
@@ -477,26 +415,7 @@ def api_history():
         'history': response.data or []
     })
 
-@app.route('/api/performance')
-@require_auth
-def api_performance():
-    if not EXCEL_PATH.exists(): return jsonify({})
-    try:
-        df = pd.read_excel(EXCEL_PATH, sheet_name='Performance').fillna('—')
-        return jsonify(dict(zip(df['Metric'], df['Value'])))
-    except: return jsonify({})
 
-@app.route('/api/open_excel')
-@require_auth
-def api_open_excel():
-    init_excel()
-    try:
-        if sys.platform == 'win32': os.startfile(str(EXCEL_PATH))
-        elif sys.platform == 'darwin': subprocess.Popen(['open', str(EXCEL_PATH)])
-        else: subprocess.Popen(['xdg-open', str(EXCEL_PATH)])
-        return jsonify({'success':True})
-    except Exception as e:
-        return jsonify({'success':False,'error':str(e)})
 
 @app.route('/api/status')
 @require_auth
@@ -519,7 +438,7 @@ def api_status():
             
     return jsonify({'model_loaded':MODEL is not None,
                     'total_tickers':len(NIFTY_TICKERS),
-                    'excel_exists':EXCEL_PATH.exists(),
+                    'storage': 'supabase',
                     'last_scan_time':last.get('timestamp') if last else None,
                     'last_signals':len(last.get('signals',[])) if last else 0,
                     'is_admin': is_admin})
@@ -556,13 +475,11 @@ def api_active_trades():
         
 
 if __name__ == '__main__':
-    init_excel()
     print("="*60)
     print(" Stock ML Dashboard v2")
     print("="*60)
     print(f" Model    : {'✅ loaded' if MODEL else '❌ not found'}")
     print(f" Tickers  : {len(NIFTY_TICKERS)}")
-    print(f" Excel    : {EXCEL_PATH}")
     print(f"\n Open: http://localhost:5000")
     print("="*60)
     app.run(host='0.0.0.0', port=5000, debug=False)
