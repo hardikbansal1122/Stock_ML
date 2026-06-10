@@ -1798,6 +1798,19 @@
       }
     };
 
+    async function loadLastScan() {
+      try {
+        const r = await fetchWithAuth('/api/last_scan');
+        const data = await r.json();
+
+        console.log('[INIT] loadLastScan response', data);
+
+        renderSignals(data);
+      } catch (e) {
+        console.error('loadLastScan failed', e);
+      }
+    }
+
     // ── Open Excel ─────────────────────────────────────────────────────────────
     window.openExcel = async function () {
       try {
@@ -1812,21 +1825,30 @@
     // ── Init (called after auth with pre-fetched status data) ──────────────────
     async function init(statusData) {
       console.log('[INIT] status received');
+
       const dot = document.getElementById('dot');
       const txt = document.getElementById('status-text');
+
       if (statusData && statusData.model_loaded) {
         txt.textContent = `Model Online · ${statusData.total_tickers} tickers`;
       } else if (statusData) {
         txt.textContent = 'Model Not Found';
         dot.style.background = '#ef4444';
       }
+
       if (statusData && statusData.last_scan_time) {
-        document.getElementById('last-date').textContent = `Last: ${statusData.last_scan_time}`;
+        document.getElementById('last-date').textContent =
+          `Last: ${statusData.last_scan_time}`;
       }
+
       console.log('[INIT] entering loadHistory');
-      loadHistory();
+      await loadHistory();
+
       console.log('[INIT] entering loadActiveTrades');
-      loadActiveTrades();
+      await loadActiveTrades();
+
+      console.log('[INIT] entering loadLastScan');
+      await loadLastScan();
     }
 
     // ── Theme ──────────────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ Run: python app.py
 Open: http://localhost:5000
 """
 
+from postgrest import base_request_builder
 from pandas.core import resample
 from pandas.core import resample
 from pandas.core import resample
@@ -26,6 +27,8 @@ import numpy as np
 import pickle, os, json, subprocess, sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from datetime import datetime, timedelta, timezone, time
+from zoneinfo import ZoneInfo
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -254,6 +257,18 @@ def run_scanner(threshold=0.60):
             'date':datetime.now().strftime("%d %b %Y"),
             'time':datetime.now().strftime("%I:%M %p")}
 
+def get_trading_date():
+
+    ist = ZoneInfo("Asia/Kolkata")
+    now = datetime.now(ist)
+
+    market_open = time(9, 15)
+
+    if now.time() < market_open:
+        return (now.date() - timedelta(days=1))
+
+    return now.date()
+
 # ── Routes ────────────────────────────────────────────────────────────────
 @app.route('/')
 def index(): return send_from_directory('static', 'index.html')
@@ -292,24 +307,44 @@ def api_sync_user():
 @app.route('/api/scan')
 @require_auth
 def api_scan():
-    # Parse threshold safely
+
+    uid = request.user.get('uid')
+    trading_date = get_trading_date()
+
+    # Has this user already scanned for today's trading session?
+    existing_scan = (
+        supabase
+        .table('user_scans')
+        .select('id')
+        .eq('uid', uid)
+        .eq('trading_date', str(trading_date))
+        .execute()
+    )
+
+    print("UID:", uid)
+    print("TRADING DATE:", trading_date)
+    print("EXISTING SCAN:", existing_scan.data)
+
+    if existing_scan.data:
+        return jsonify({
+            "already_scanned": True,
+            "message": "You have already generated today's picks."
+        })
+
+    # Parse threshold
     threshold = float(request.args.get('threshold', 0.60))
 
-    # Run scanner
+    # Run scanner ONLY if user has not scanned today
     result = run_scanner(threshold=threshold)
-
-    
-
-    # Current authenticated user
-    uid = request.user.get('uid')
 
     # Store trades + scan history in Supabase
     if supabase and uid:
+
         for sig in result.get('signals', []):
 
             ticker = sig.get('ticker')
 
-            # Check if an OPEN trade already exists
+            # Prevent duplicate OPEN trades
             dup = (
                 supabase
                 .table('trades')
@@ -320,8 +355,8 @@ def api_scan():
                 .execute()
             )
 
-            # Only create a new trade if one doesn't already exist
             if not dup.data:
+
                 trade_resp = (
                     supabase
                     .table('trades')
@@ -339,9 +374,7 @@ def api_scan():
                 print(f"Inserted trade: {ticker} for {uid}")
                 print("TRADE RESPONSE:", trade_resp)
 
-            # ALWAYS store scan result
-            print("INSERTING SCAN RESULT:", ticker)
-
+            # Store scan result history
             scan_resp = (
                 supabase
                 .table('scan_results')
@@ -355,6 +388,19 @@ def api_scan():
             )
 
             print("SCAN RESULT RESPONSE:", scan_resp)
+
+    # Mark that this user has scanned today
+    scan_marker = (
+        supabase
+        .table('user_scans')
+        .insert({
+            'uid': uid,
+            'trading_date': str(trading_date)
+        })
+        .execute()
+    )
+
+    print("USER_SCAN INSERT:", scan_marker)
 
     save_last_scan(result)
 
@@ -374,15 +420,19 @@ def api_last_scan():
         .order('scan_time', desc=True)
         .execute()
     )
+    print("LAST_SCAN RESPONSE:", response.data)
 
     signals = []
 
     for row in response.data or []:
         signals.append({
-            'ticker': row['ticker'],
-            'confidence': float(row['confidence']),
-            'close': float(row['price'])
-        })
+        'ticker': row['ticker'],
+        'confidence': float(row['confidence']),
+        'close': float(row['price']),
+        'rsi': 50,
+        'volume_ratio': 1.0,
+        'momentum_5d': 0
+    })
 
     return jsonify({
         'signals': signals,
@@ -402,19 +452,33 @@ def api_history():
 
     uid = request.user.get('uid')
 
-    response = (
-        supabase
-        .table('trades')
-        .select('*')
-        .eq('uid', uid)
-        .order('entry_date', desc=True)
-        .execute()
-    )
+    try:
 
-    return jsonify({
-        'history': response.data or []
-    })
+        print("HISTORY UID:", uid)
 
+        response = (
+            supabase
+            .table('trades')
+            .select('*')
+            .eq('uid', uid)
+            .order('entry_date', desc=True)
+            .execute()
+        )
+
+        print("HISTORY RESPONSE:", response.data)
+
+        return jsonify({
+            'history': response.data or []
+        })
+
+    except Exception as e:
+
+        print("HISTORY ERROR:", str(e))
+
+        return jsonify({
+            'history': [],
+            'error': str(e)
+        }), 500
 
 
 @app.route('/api/status')
