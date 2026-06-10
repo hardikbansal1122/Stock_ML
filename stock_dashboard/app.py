@@ -461,12 +461,21 @@ def api_resolve():
 @app.route('/api/history')
 @require_auth
 def api_history():
-    if not EXCEL_PATH.exists(): return jsonify({'history':[]})
-    try:
-        df = pd.read_excel(EXCEL_PATH, sheet_name='Signals Log').fillna('')
-        return jsonify({'history':df.to_dict(orient='records')})
-    except Exception as e:
-        return jsonify({'history':[],'error':str(e)})
+
+    uid = request.user.get('uid')
+
+    response = (
+        supabase
+        .table('trades')
+        .select('*')
+        .eq('uid', uid)
+        .order('entry_date', desc=True)
+        .execute()
+    )
+
+    return jsonify({
+        'history': response.data or []
+    })
 
 @app.route('/api/performance')
 @require_auth

@@ -1434,46 +1434,72 @@
 
     // Helper to normalize Excel row data keys
     function normalizeRow(r) {
-      const scanDate = r['Scan Date'] ? String(r['Scan Date']).substring(0, 10) : '';
-      const scanTime = r['Scan Time'] || r['Time'] || '';
-      const ticker = r['Ticker'] || '—';
 
-      let confidence = 0;
-      if (r['Confidence%'] !== undefined && r['Confidence%'] !== '') confidence = Number(r['Confidence%']);
-      else if (r['Confidence'] !== undefined && r['Confidence'] !== '') confidence = Number(r['Confidence']) * 100;
+      const scanDate =
+        r.scanDate ||
+        (r.entry_date ? String(r.entry_date).substring(0, 10) : '');
 
-      const entryPrice = (r['Entry Price'] !== undefined && r['Entry Price'] !== '') ? Number(r['Entry Price']) : null;
+      const scanTime =
+        r.scanTime ||
+        (r.entry_date
+          ? new Date(r.entry_date).toLocaleTimeString()
+          : '');
 
-      let exitPrice = r['Actual Exit Price'] !== undefined && r['Actual Exit Price'] !== '' ? r['Actual Exit Price'] : r['Exit Price'];
-      if (exitPrice === 'Pending' || exitPrice === '') exitPrice = null;
-      else if (exitPrice !== undefined && exitPrice !== null) exitPrice = Number(exitPrice);
-      else exitPrice = null;
+      const ticker =
+        r.ticker ||
+        r['Ticker'] ||
+        '—';
 
-      let netReturn = r['Net Return%'] !== undefined && r['Net Return%'] !== '' ? r['Net Return%'] : r['Return%'];
-      if (netReturn === '' || netReturn === 'Pending') netReturn = null;
-      else if (netReturn !== undefined && netReturn !== null) netReturn = Number(netReturn);
-      else netReturn = null;
+      const confidence =
+        r.confidence !== undefined
+          ? Number(r.confidence) * 100
+          : (
+            r['Confidence%'] !== undefined
+              ? Number(r['Confidence%'])
+              : 0
+          );
 
-      const outcome = String(r['Outcome'] || 'Pending').trim();
+      const entryPrice =
+        r.entry_price !== undefined
+          ? Number(r.entry_price)
+          : (
+            r['Entry Price'] !== undefined
+              ? Number(r['Entry Price'])
+              : null
+          );
 
-      // A trade is CLOSED if it has a non-null Exit Price OR outcome contains Win/Loss/Closed and is not Pending
-      const isClosed = exitPrice !== null || (!outcome.toLowerCase().includes('pending') && outcome !== '');
-      const status = isClosed ? 'CLOSED' : 'OPEN';
+      const exitPrice =
+        r.exit_price !== undefined && r.exit_price !== null
+          ? Number(r.exit_price)
+          : null;
 
-      // Compute holding days
+      const netReturn =
+        r.return_pct !== undefined && r.return_pct !== null
+          ? Number(r.return_pct)
+          : null;
+
+      const status =
+        r.status || 'OPEN';
+
       let holdingDays = 0;
+
       if (scanDate) {
         const entryMs = new Date(scanDate).getTime();
-        if (isClosed) {
-          const targetExitDate = r['Target Exit Date'] ? String(r['Target Exit Date']).substring(0, 10) : '';
-          if (targetExitDate) {
-            const exitMs = new Date(targetExitDate).getTime();
-            holdingDays = Math.max(0, Math.floor((exitMs - entryMs) / 86400000));
-          } else {
-            holdingDays = 7; // default fallback
-          }
+
+        if (status === 'OPEN') {
+          holdingDays = Math.max(
+            0,
+            Math.floor((Date.now() - entryMs) / 86400000)
+          );
         } else {
-          holdingDays = Math.max(0, Math.floor((Date.now() - entryMs) / 86400000));
+          const exitMs = r.exit_date
+            ? new Date(r.exit_date).getTime()
+            : Date.now();
+
+          holdingDays = Math.max(
+            0,
+            Math.floor((exitMs - entryMs) / 86400000)
+          );
         }
       }
 
@@ -1485,7 +1511,7 @@
         entryPrice,
         exitPrice,
         netReturn,
-        outcome,
+        outcome: status,
         status,
         holdingDays,
         raw: r
