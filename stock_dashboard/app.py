@@ -8,6 +8,15 @@ Run: python app.py
 Open: http://localhost:5000
 """
 
+from pandas.core import resample
+from pandas.core import resample
+from pandas.core import resample
+from pandas.core import resample
+from pandas.core import resample
+from pandas.core import resample
+from pandas.core import resample
+from pandas.core import resample
+from flask import debughelpers
 from flask import Flask, jsonify, send_from_directory, request
 
 from auth_middleware import require_auth, require_admin, supabase, ADMIN_EMAILS
@@ -340,21 +349,29 @@ def api_sync_user():
 
 
 @app.route('/api/scan')
-@require_auth   
+@require_auth
 def api_scan():
+    # Parse threshold safely
     threshold = float(request.args.get('threshold', 0.60))
+
+    # Run scanner
     result = run_scanner(threshold=threshold)
+
+    # Keep Excel for now (we'll remove it later)
     if 'signals' in result and result['signals']:
         log_signals_to_excel(result['signals'])
         result['excel_saved'] = True
 
+    # Current authenticated user
     uid = request.user.get('uid')
 
+    # Store trades + scan history in Supabase
     if supabase and uid:
-        for sig in result['signals']:
+        for sig in result.get('signals', []):
 
             ticker = sig.get('ticker')
 
+            # Check if an OPEN trade already exists
             dup = (
                 supabase
                 .table('trades')
@@ -365,27 +382,76 @@ def api_scan():
                 .execute()
             )
 
-            if dup.data:
-                continue
+            # Only create a new trade if one doesn't already exist
+            if not dup.data:
+                trade_resp = (
+                    supabase
+                    .table('trades')
+                    .insert({
+                        'uid': uid,
+                        'ticker': ticker,
+                        'confidence': sig.get('confidence'),
+                        'entry_price': sig.get('close'),
+                        'entry_date': datetime.now(timezone.utc).isoformat(),
+                        'status': 'OPEN'
+                    })
+                    .execute()
+                )
 
-            supabase.table('trades').insert({
-                'uid': uid,
-                'ticker': ticker,
-                'confidence': sig.get('confidence'),
-                'entry_price': sig.get('close'),
-                'entry_date': datetime.now(timezone.utc).isoformat(),
-                'status': 'OPEN'
-            }).execute()
-            print(f"Inserted trade: {ticker} for {uid}")
+                print(f"Inserted trade: {ticker} for {uid}")
+                print("TRADE RESPONSE:", trade_resp)
+
+            # ALWAYS store scan result
+            print("INSERTING SCAN RESULT:", ticker)
+
+            scan_resp = (
+                supabase
+                .table('scan_results')
+                .insert({
+                    'uid': uid,
+                    'ticker': ticker,
+                    'confidence': sig.get('confidence'),
+                    'price': sig.get('close')
+                })
+                .execute()
+            )
+
+            print("SCAN RESULT RESPONSE:", scan_resp)
+
     save_last_scan(result)
+
     return jsonify(result)
 
 @app.route('/api/last_scan')
 @require_auth
 def api_last_scan():
-    data = load_last_scan()
-    return jsonify(data) if data else jsonify({'signals':[],'processed':0,'total':len(NIFTY_TICKERS)})
 
+    uid = request.user.get('uid')
+
+    response = (
+        supabase
+        .table('scan_results')
+        .select('*')
+        .eq('uid', uid)
+        .order('scan_time', desc=True)
+        .execute()
+    )
+
+    signals = []
+
+    for row in response.data or []:
+        signals.append({
+            'ticker': row['ticker'],
+            'confidence': float(row['confidence']),
+            'close': float(row['price'])
+        })
+
+    return jsonify({
+        'signals': signals,
+        'processed': len(signals),
+        'total': len(NIFTY_TICKERS)
+    }
+)
 @app.route('/api/resolve')
 @require_auth
 def api_resolve():
@@ -412,7 +478,7 @@ def api_performance():
     except: return jsonify({})
 
 @app.route('/api/open_excel')
-@require_admin
+@require_auth
 def api_open_excel():
     init_excel()
     try:
