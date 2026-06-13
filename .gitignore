@@ -28,6 +28,7 @@ dist/
 .env
 frontend/.env
 backend/.env
+testenv/
 
 # =========================
 # IDE/editor settings
@@ -115,3 +116,5 @@ original_dashboard.html
 *_backup.html
 dashboard_before_*.html
 index_backup.html
+
+

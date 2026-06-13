@@ -1038,6 +1038,23 @@
       </button>
 
       <hr class="nav-divider">
+
+      <!-- Admin section — hidden until is_admin confirmed -->
+      <div id="admin-nav-section" style="display:none">
+        <div class="nav-section-label" style="color:rgba(255,255,255,0.18);margin-top:4px;">Founder</div>
+        <button class="nav-item" id="nav-admin-overview" onclick="switchWs('admin-overview')">
+          <span class="nav-icon">⊞</span> Overview
+        </button>
+        <button class="nav-item" id="nav-admin-users" onclick="switchWs('admin-users')">
+          <span class="nav-icon">◉</span> Users
+        </button>
+        <button class="nav-item" id="nav-admin-requests" onclick="switchWs('admin-requests')">
+          <span class="nav-icon">◻</span> Requests
+          <span id="req-badge"
+            style="display:none;margin-left:auto;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;padding:1px 5px;border-radius:2px;"></span>
+        </button>
+        <hr class="nav-divider">
+      </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -1301,6 +1318,125 @@
       </div>
       <!-- /ws-stats -->
 
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 5 — ADMIN OVERVIEW
+      ══════════════════════════════════════════ -->
+      <div class="workspace" id="ws-admin-overview">
+        <div class="ws-header">
+          <div class="ws-title">Platform Overview</div>
+          <p class="ws-sub">Real-time platform metrics across all registered users.</p>
+        </div>
+
+        <div class="stats-grid cols-4" style="margin-bottom:2px;">
+          <div class="stat-card">
+            <div class="stat-label">Approved Users</div>
+            <div class="stat-val" id="adm-total-users">—</div>
+            <div class="stat-det">Active accounts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active (7 days)</div>
+            <div class="stat-val accent" id="adm-active-users">—</div>
+            <div class="stat-det">Scanned recently</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Today's Scans</div>
+            <div class="stat-val accent" id="adm-today-scans">—</div>
+            <div class="stat-det">Users scanned today</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Requests</div>
+            <div class="stat-val" id="adm-pending-req" style="color:var(--amber)">—</div>
+            <div class="stat-det">Awaiting review</div>
+          </div>
+        </div>
+
+        <div class="stats-grid cols-4" style="margin-bottom:20px;">
+          <div class="stat-card">
+            <div class="stat-label">Total Scans</div>
+            <div class="stat-val" id="adm-total-scans">—</div>
+            <div class="stat-det">All-time scan sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Trades</div>
+            <div class="stat-val" id="adm-total-trades">—</div>
+            <div class="stat-det">All users combined</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Closed Trades</div>
+            <div class="stat-val" id="adm-closed-trades">—</div>
+            <div class="stat-det">Resolved positions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Platform Win Rate</div>
+            <div class="stat-val accent" id="adm-winrate">—</div>
+            <div class="stat-det">Closed trades only</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title">Quick Actions</div>
+            <div class="sec-meta">Founder controls</div>
+          </div>
+          <div style="padding:24px 28px;display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="btn btn-outline" onclick="switchWs('admin-users')">→ Manage Users</button>
+            <button class="btn btn-outline" onclick="switchWs('admin-requests')">→ Review Requests</button>
+          </div>
+        </div>
+      </div>
+      <!-- /ws-admin-overview -->
+
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 6 — ADMIN USERS
+      ══════════════════════════════════════════ -->
+      <div class="workspace" id="ws-admin-users">
+        <div class="ws-header">
+          <div class="ws-title">User Management</div>
+          <p class="ws-sub">All registered users. Promote to admin or revoke platform access.</p>
+        </div>
+
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title">All Users</div>
+            <div class="sec-meta" id="adm-users-meta">Loading...</div>
+          </div>
+          <div id="adm-users-box">
+            <div class="loading">
+              <div class="spin"></div>
+              <div class="spin-txt">Fetching user data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /ws-admin-users -->
+
+
+      <!-- ══════════════════════════════════════════
+           WORKSPACE 7 — ADMIN REQUESTS
+      ══════════════════════════════════════════ -->
+      <div class="workspace" id="ws-admin-requests">
+        <div class="ws-header">
+          <div class="ws-title">Access Requests</div>
+          <p class="ws-sub">Review and approve or reject pending access requests from new users.</p>
+        </div>
+
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title">Pending Requests</div>
+            <div class="sec-meta" id="adm-req-meta">Loading...</div>
+          </div>
+          <div id="adm-requests-box">
+            <div class="loading">
+              <div class="spin"></div>
+              <div class="spin-txt">Fetching requests...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /ws-admin-requests -->
+
     </div><!-- /workspace-wrap -->
   </div><!-- /main -->
 
@@ -1308,7 +1444,15 @@
     import { auth, onAuthStateChanged, signOut } from '/static/auth.js';
 
     // ── Workspace navigation ───────────────────────────────────────────────────
-    const WS_TITLES = { today: 'Today', active: 'Active Trades', history: 'History', stats: 'Statistics' };
+    const WS_TITLES = {
+      today: 'Today',
+      active: 'Active Trades',
+      history: 'History',
+      stats: 'Statistics',
+      'admin-overview': 'Admin · Overview',
+      'admin-users': 'Admin · Users',
+      'admin-requests': 'Admin · Access Requests',
+    };
 
     function switchWs(name) {
       document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
@@ -1747,36 +1891,110 @@
     window.runScan = async function () {
       const threshold = slider.value / 100;
       const btn = document.getElementById('scan-btn');
+
       btn.disabled = true;
       btn.innerHTML = '◷ Scanning...';
 
-      // Switch to Today workspace
       switchWs('today');
 
       document.getElementById('signals-box').innerHTML = `
-      <div class="loading">
-        <div class="spin"></div>
-        <div class="spin-txt">Scanning 200+ stocks · ~3 minutes</div>
-      </div>`;
+  <div class="loading">
+    <div class="spin"></div>
+    <div class="spin-txt">Scanning 200+ stocks · ~3 minutes</div>
+  </div>`;
 
       try {
         const r = await fetchWithAuth(`/api/scan?threshold=${threshold}`);
         const data = await r.json();
-        if (data.error) {
-          document.getElementById('signals-box').innerHTML = `<div class="empty"><div class="empty-t">Error</div><div class="empty-s">${data.error}</div></div>`;
-          return;
-        }
+
+        // User already scanned today
+        window.runScan = async function () {
+          const threshold = slider.value / 100;
+          const btn = document.getElementById('scan-btn');
+
+          btn.disabled = true;
+          btn.innerHTML = '◷ Scanning...';
+
+          switchWs('today');
+
+          document.getElementById('signals-box').innerHTML = `
+  <div class="loading">
+    <div class="spin"></div>
+    <div class="spin-txt">Scanning 200+ stocks · ~3 minutes</div>
+  </div>`;
+
+          try {
+            const r = await fetchWithAuth(`/api/scan?threshold=${threshold}`);
+            const data = await r.json();
+
+            // User already scanned today
+            if (data.already_scanned) {
+
+              document.getElementById('signals-box').innerHTML = `
+      <div class="empty">
+        <div class="empty-t">Today's Picks Already Generated</div>
+        <div class="empty-s">${data.message}</div>
+      </div>`;
+
+              await loadLastScan();
+
+              return;
+            }
+
+            // Backend error
+            if (data.error) {
+              document.getElementById('signals-box').innerHTML = `
+      <div class="empty">
+        <div class="empty-t">Error</div>
+        <div class="empty-s">${data.error}</div>
+      </div>`;
+              return;
+            }
+
+            renderSignals(data);
+
+            btn.disabled = true;
+            btn.innerHTML = '✓ Picks Generated Today';
+
+            loadHistory();
+            loadActiveTrades();
+
+          } catch (e) {
+
+            document.getElementById('signals-box').innerHTML = `
+    <div class="empty">
+      <div class="empty-t">Connection Lost</div>
+      <div class="empty-s">${e.message}</div>
+    </div>`;
+
+          } finally {
+
+            btn.disabled = false;
+            btn.innerHTML = '▸ Run Scanner';
+
+          }
+        };
+
         renderSignals(data);
+
         loadHistory();
         loadActiveTrades();
+
       } catch (e) {
-        document.getElementById('signals-box').innerHTML = `<div class="empty"><div class="empty-t">Connection lost</div><div class="empty-s">${e.message}</div></div>`;
+
+        document.getElementById('signals-box').innerHTML = `
+    <div class="empty">
+      <div class="empty-t">Connection Lost</div>
+      <div class="empty-s">${e.message}</div>
+    </div>`;
+
       } finally {
+
         btn.disabled = false;
         btn.innerHTML = '▸ Run Scanner';
+
       }
     };
-
     // ── Resolve trades ─────────────────────────────────────────────────────────
     window.checkResolved = async function () {
       const banner = document.getElementById('resolve-banner');
@@ -1822,6 +2040,196 @@
       }
     };
 
+    // ── Admin: load overview metrics ──────────────────────────────────────────
+    async function loadAdminOverview() {
+      try {
+        const r = await fetchWithAuth('/api/admin/overview');
+        const d = await r.json();
+        document.getElementById('adm-total-users').textContent = d.total_users ?? '—';
+        document.getElementById('adm-active-users').textContent = d.active_users ?? '—';
+        document.getElementById('adm-today-scans').textContent = d.today_scan_count ?? '—';
+        document.getElementById('adm-pending-req').textContent = d.pending_requests ?? '—';
+        document.getElementById('adm-total-scans').textContent = d.total_scans ?? '—';
+        document.getElementById('adm-total-trades').textContent = d.total_trades ?? '—';
+        document.getElementById('adm-closed-trades').textContent = d.closed_trades ?? '—';
+        document.getElementById('adm-winrate').textContent =
+          d.platform_winrate !== null && d.platform_winrate !== undefined ? d.platform_winrate + '%' : '—';
+
+        if (d.pending_requests > 0) {
+          const badge = document.getElementById('req-badge');
+          badge.textContent = d.pending_requests;
+          badge.style.display = 'inline';
+        }
+      } catch (e) { console.error('loadAdminOverview failed', e); }
+    }
+
+    // ── Admin: load users table ───────────────────────────────────────────────
+    async function loadAdminUsers() {
+      try {
+        const r = await fetchWithAuth('/api/admin/users');
+        const d = await r.json();
+        const users = d.users || [];
+        document.getElementById('adm-users-meta').textContent = `${users.length} registered users`;
+
+        if (users.length === 0) {
+          document.getElementById('adm-users-box').innerHTML =
+            `<div class="empty"><div class="empty-t">No users yet</div></div>`;
+          return;
+        }
+
+        let html = `<table class="tbl"><thead><tr>
+          <th>Email</th><th>Display Name</th><th>Role</th><th>Scans</th><th>Trades</th><th>Last Login</th><th>Actions</th>
+        </tr></thead><tbody>`;
+
+        users.forEach(u => {
+          const roleClass = u.role === 'admin' ? 'rsi-os' : 'rsi-nt';
+          const lastLogin = u.last_login
+            ? new Date(u.last_login).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—';
+          const approvedBadge = u.is_approved
+            ? `<span class="rsi-b rsi-os" style="font-size:9px;margin-left:6px;">✓</span>`
+            : `<span class="rsi-b rsi-ob" style="font-size:9px;margin-left:6px;">✗</span>`;
+
+          const actions = u.is_founder
+            ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);">Founder</span>`
+            : `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+                ${u.role !== 'admin'
+              ? `<button class="btn btn-outline" style="font-size:11px;padding:5px 10px;" onclick="adminSetRole('${u.uid}','admin')">Make Admin</button>`
+              : `<button class="btn btn-outline" style="font-size:11px;padding:5px 10px;color:var(--amber);border-color:var(--amber);" onclick="adminSetRole('${u.uid}','user')">Revoke Admin</button>`
+            }
+                ${u.is_approved
+              ? `<button class="btn btn-outline" style="font-size:11px;padding:5px 10px;color:var(--red);border-color:var(--red);" onclick="adminRevokeUser('${u.uid}')">Revoke Access</button>`
+              : ''
+            }
+              </div>`;
+
+          html += `<tr>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${u.email}${approvedBadge}</td>
+            <td style="font-size:13px;">${u.display_name || '—'}</td>
+            <td><span class="rsi-b ${roleClass}">${u.role}</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;">${u.scan_count}</td>
+            <td style="font-family:'JetBrains Mono',monospace;">${u.trade_count}</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${lastLogin}</td>
+            <td>${actions}</td>
+          </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('adm-users-box').innerHTML = html;
+      } catch (e) {
+        console.error('loadAdminUsers failed', e);
+        document.getElementById('adm-users-box').innerHTML =
+          `<div class="empty"><div class="empty-t">Error loading users</div><div class="empty-s">${e.message}</div></div>`;
+      }
+    }
+
+    window.adminSetRole = async function (uid, role) {
+      if (!confirm(`Set role to "${role}" for this user?`)) return;
+      try {
+        const r = await fetchWithAuth(`/api/admin/users/${uid}/role`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role })
+        });
+        const d = await r.json();
+        if (d.error) { alert('Error: ' + d.error); return; }
+        await loadAdminUsers();
+      } catch (e) { alert('Failed: ' + e.message); }
+    };
+
+    window.adminRevokeUser = async function (uid) {
+      if (!confirm('Revoke this user\'s platform access? They will not be able to log in.')) return;
+      try {
+        const r = await fetchWithAuth(`/api/admin/users/${uid}/revoke`, { method: 'POST' });
+        const d = await r.json();
+        if (d.error) { alert('Error: ' + d.error); return; }
+        await loadAdminUsers();
+        await loadAdminOverview();
+      } catch (e) { alert('Failed: ' + e.message); }
+    };
+
+    // ── Admin: load access requests ───────────────────────────────────────────
+    async function loadAdminRequests() {
+      try {
+        const r = await fetchWithAuth('/api/admin/requests');
+        const d = await r.json();
+        const reqs = d.requests || [];
+        const pending = reqs.filter(r => r.status === 'pending');
+        document.getElementById('adm-req-meta').textContent =
+          `${pending.length} pending · ${reqs.length} total`;
+
+        if (reqs.length === 0) {
+          document.getElementById('adm-requests-box').innerHTML =
+            `<div class="empty"><div class="empty-t">No requests yet</div><div class="empty-s">Access requests from new users will appear here</div></div>`;
+          return;
+        }
+
+        let html = `<table class="tbl"><thead><tr>
+          <th>Email</th><th>Name</th><th>Reason</th><th>Submitted</th><th>Status</th><th>Actions</th>
+        </tr></thead><tbody>`;
+
+        reqs.forEach(req => {
+          const statusClass = req.status === 'approved' ? 'rsi-os' : req.status === 'rejected' ? 'rsi-ob' : 'rsi-nt';
+          const submittedDate = req.created_at
+            ? new Date(req.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—';
+          const actions = req.status === 'pending'
+            ? `<div style="display:flex;gap:6px;">
+                <button class="btn btn-outline" style="font-size:11px;padding:5px 10px;" onclick="adminApproveRequest('${req.id}')">✓ Approve</button>
+                <button class="btn btn-outline" style="font-size:11px;padding:5px 10px;color:var(--red);border-color:var(--red);" onclick="adminRejectRequest('${req.id}')">✗ Reject</button>
+              </div>`
+            : `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);">Reviewed by ${req.reviewed_by || '—'}</span>`;
+
+          html += `<tr>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${req.email || '—'}</td>
+            <td style="font-size:13px;">${req.display_name || '—'}</td>
+            <td style="font-size:12px;color:var(--txt2);max-width:200px;word-break:break-word;">${req.reason || '—'}</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${submittedDate}</td>
+            <td><span class="rsi-b ${statusClass}">${req.status}</span></td>
+            <td>${actions}</td>
+          </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('adm-requests-box').innerHTML = html;
+      } catch (e) {
+        console.error('loadAdminRequests failed', e);
+        document.getElementById('adm-requests-box').innerHTML =
+          `<div class="empty"><div class="empty-t">Error loading requests</div><div class="empty-s">${e.message}</div></div>`;
+      }
+    }
+
+    window.adminApproveRequest = async function (reqId) {
+      if (!confirm('Approve this access request?')) return;
+      try {
+        const r = await fetchWithAuth(`/api/admin/requests/${reqId}/approve`, { method: 'POST' });
+        const d = await r.json();
+        if (d.error) { alert('Error: ' + d.error); return; }
+        await loadAdminRequests();
+        await loadAdminOverview();
+      } catch (e) { alert('Failed: ' + e.message); }
+    };
+
+    window.adminRejectRequest = async function (reqId) {
+      if (!confirm('Reject this access request?')) return;
+      try {
+        const r = await fetchWithAuth(`/api/admin/requests/${reqId}/reject`, { method: 'POST' });
+        const d = await r.json();
+        if (d.error) { alert('Error: ' + d.error); return; }
+        await loadAdminRequests();
+        await loadAdminOverview();
+      } catch (e) { alert('Failed: ' + e.message); }
+    };
+
+    // ── Patch switchWs to lazy-load admin workspaces ──────────────────────────
+    const _originalSwitchWs = switchWs;
+    window.switchWs = function (name) {
+      _originalSwitchWs(name);
+      if (name === 'admin-overview') loadAdminOverview();
+      if (name === 'admin-users') loadAdminUsers();
+      if (name === 'admin-requests') loadAdminRequests();
+    };
+
     // ── Init (called after auth with pre-fetched status data) ──────────────────
     async function init(statusData) {
       console.log('[INIT] status received');
@@ -1841,6 +2249,11 @@
           `Last: ${statusData.last_scan_time}`;
       }
 
+      // Show admin nav if user is admin
+      if (statusData && statusData.is_admin) {
+        document.getElementById('admin-nav-section').style.display = 'block';
+      }
+
       console.log('[INIT] entering loadHistory');
       await loadHistory();
 
@@ -1849,6 +2262,24 @@
 
       console.log('[INIT] entering loadLastScan');
       await loadLastScan();
+
+      try {
+
+        const r = await fetchWithAuth('/api/can_scan');
+        const data = await r.json();
+
+        if (!data.can_scan) {
+
+          const btn = document.getElementById('scan-btn');
+
+          btn.disabled = true;
+          btn.innerHTML = '✓ Picks Generated Today';
+
+        }
+
+      } catch (e) {
+        console.error('can_scan check failed', e);
+      }
     }
 
     // ── Theme ──────────────────────────────────────────────────────────────────
@@ -1876,8 +2307,11 @@
         const check = await fetch('/api/status', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        const statusData = await check.clone().json();
+        console.log('STATUS RESPONSE:', statusData);
+
         if (!check.ok) {
-          // Not approved or token invalid — sign out immediately
           await signOut(auth);
           window.location.href = '/';
           return;
