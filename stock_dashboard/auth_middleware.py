@@ -1,4 +1,5 @@
 import os
+import json
 import functools
 from flask import request, jsonify
 from firebase_admin import auth, credentials, initialize_app
@@ -8,15 +9,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize Firebase Admin
-cred_path = os.getenv("FIREBASE_CREDENTIALS_PATH", "firebase_credentials.json")
 try:
-    if os.path.exists(cred_path):
-        cred = credentials.Certificate(cred_path)
+    firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+    if firebase_json:
+        cred_dict = json.loads(firebase_json)
+        cred = credentials.Certificate(cred_dict)
         initialize_app(cred)
+        print("✅ Firebase initialized from Railway environment variable")
     else:
-        print(f"Warning: {cred_path} not found. Firebase Admin not initialized.")
+        print("❌ FIREBASE_SERVICE_ACCOUNT_JSON not found")
+
 except Exception as e:
     print(f"Firebase Admin init failed: {e}")
+
 
 # Initialize Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
