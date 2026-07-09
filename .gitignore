@@ -62,17 +62,17 @@ Thumbs.db
 *.log
 
 # =========================
-# ML models & artifacts
+# ML artifacts
 # =========================
-models/
 artifacts/
 checkpoints/
 
-*.pkl
-*.joblib
+# Keep production models in Git
+# *.pkl
+# *.joblib
 
 # =========================
-# Generated datasets/results
+# Training datasets
 # =========================
 data/
 exports/
@@ -82,7 +82,6 @@ portfolio_history.csv
 signals_*.csv
 test_predictions.csv
 features.csv
-feature_list.csv
 
 # =========================
 # Frontend
