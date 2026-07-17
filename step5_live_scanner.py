@@ -6,14 +6,20 @@ It downloads yesterday's data, runs the model,
 and tells you which stocks to buy today.
 """
 
+import sys
+from pathlib import Path
+from datetime import datetime, timedelta, timezone, date
+import warnings
 import yfinance as yf
 import pandas as pd
 import numpy as np
 import pickle
-from pathlib import Path
-from datetime import datetime, timedelta, timezone, date
-import warnings
+
 warnings.filterwarnings('ignore')
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from universe import get_universe_tickers, normalize_ticker
 
 DATA_DIR = Path('data')
 
@@ -32,31 +38,8 @@ except FileNotFoundError:
     print("❌ Model not found. Run step3_train_model.py first.")
     exit()
 
-# ── Load Nifty 200 tickers ────────────────────────────────────────────────
-NIFTY_200 = [
-    "RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","HINDUNILVR","ITC",
-    "SBIN","BHARTIARTL","KOTAKBANK","LT","AXISBANK","ASIANPAINT","MARUTI",
-    "SUNPHARMA","TITAN","ULTRACEMCO","BAJFINANCE","WIPRO","HCLTECH",
-    "NESTLEIND","TECHM","POWERGRID","NTPC","ONGC","JSWSTEEL",
-    "ADANIENT","ADANIPORTS","BAJAJFINSV","COALINDIA","DIVISLAB","DRREDDY",
-    "EICHERMOT","GRASIM","HDFCLIFE","HEROMOTOCO","HINDALCO","INDUSINDBK",
-    "CIPLA","BPCL","BRITANNIA","APOLLOHOSP","TATACONSUM","SBILIFE",
-    "TATASTEEL","BAJAJ-AUTO","SHREECEM","SIEMENS","HAL",
-    "PIDILITIND","HAVELLS","DABUR","BERGEPAINT","MARICO","GODREJCP",
-    "COLPAL","TORNTPHARM","AMBUJACEM","ACC","BANKBARODA","FEDERALBNK",
-    "IDFCFIRSTB","CHOLAFIN","IRCTC","TATAPOWER","AUROPHARMA","BIOCON",
-    "LALPATHLAB","JUBLFOOD","TRENT","VEDL","NATIONALUM","HINDZINC","NMDC",
-    "MPHASIS","LTTS","COFORGE","PERSISTENT","KPITTECH","TATAELXSI",
-    "BEL","BHEL","ASTRAL","SUPREMEIND","PAGEIND","DIXON","DMART",
-    "NAUKRI","ANGELONE","CDSL","MCX","MANAPPURAM","M&M",
-    "ZOMATO.BO","TATAMOTORS.BO","ICICIPRULI","ICICIGI","LICI",
-    "GAIL","IOC","HINDPETRO","CASTROLIND","MRPL",
-    "SAIL","NATIONALUM","MOIL","WELCORP","RATNAMANI",
-    "ABCAPITAL","MFSL","STAR","NIACL","GODIGIT",
-    "TATACOMM","HFCL","RAILTEL","ROUTE","TANLA",
-    "ALKEM","MANKIND","IPCA","LAURUSLABS","GRANULES",
-    "CONCOR","BLUEDART","MAHLOG","VRL","TCI",
-]
+# ── Load universe from the shared CSV ─────────────────────────────────────
+NIFTY_200 = [normalize_ticker(t) for t in get_universe_tickers(ROOT / 'universe' / 'universe.csv')]
 NIFTY_200 = list(dict.fromkeys(NIFTY_200))
 
 IST = timezone(timedelta(hours=5, minutes=30))

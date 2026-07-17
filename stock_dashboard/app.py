@@ -37,9 +37,13 @@ IST_TZ = ZoneInfo("Asia/Kolkata")
 app = Flask(__name__, static_folder='static')
 
 BASE_DIR       = Path(__file__).parent
+ROOT_DIR       = BASE_DIR.parent
 MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
+
+sys.path.insert(0, str(ROOT_DIR))
+from universe import get_universe_tickers, normalize_ticker
 
 
 # ── Load model ────────────────────────────────────────────────────────────
@@ -53,33 +57,7 @@ except Exception as e:
     MODEL = None
 
 NIFTY_TICKERS = list(dict.fromkeys([
-    "RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","HINDUNILVR","ITC",
-    "SBIN","BHARTIARTL","KOTAKBANK","LT","AXISBANK","ASIANPAINT","MARUTI",
-    "SUNPHARMA","TITAN","ULTRACEMCO","BAJFINANCE","WIPRO","HCLTECH",
-    "NESTLEIND","TECHM","POWERGRID","NTPC","ONGC","JSWSTEEL",
-    "ADANIENT","ADANIPORTS","BAJAJFINSV","COALINDIA","DIVISLAB","DRREDDY",
-    "EICHERMOT","GRASIM","HDFCLIFE","HEROMOTOCO","HINDALCO","INDUSINDBK",
-    "CIPLA","BPCL","BRITANNIA","APOLLOHOSP","TATACONSUM","SBILIFE",
-    "TATASTEEL","BAJAJ-AUTO","SHREECEM","SIEMENS","HAL",
-    "PIDILITIND","HAVELLS","DABUR","BERGEPAINT","MARICO","GODREJCP",
-    "COLPAL","TORNTPHARM","AMBUJACEM","ACC","BANKBARODA","FEDERALBNK",
-    "IDFCFIRSTB","CHOLAFIN","IRCTC","TATAPOWER","AUROPHARMA","BIOCON",
-    "LALPATHLAB","JUBLFOOD","TRENT","VEDL","NATIONALUM","HINDZINC","NMDC",
-    "MPHASIS","LTTS","COFORGE","PERSISTENT","KPITTECH","TATAELXSI",
-    "BEL","BHEL","ASTRAL","SUPREMEIND","PAGEIND","DIXON","DMART",
-    "NAUKRI","ANGELONE","CDSL","MCX","MANAPPURAM","M&M",
-    "ICICIPRULI","LICI","GAIL","IOC","HINDPETRO",
-    "SAIL","MOIL","WELCORP","RATNAMANI","ABCAPITAL",
-    "TATACOMM","HFCL","RAILTEL","TANLA",
-    "ALKEM","MANKIND","LAURUSLABS","GRANULES",
-    "CONCOR","SUZLON","INOXWIND","UPL","SRF","DEEPAKNTR",
-    "MUTHOOTFIN","RECLTD","PFC","IRFC","NHPC","SJVN",
-    "GODREJPROP","DLF","OBEROIRLTY","PRESTIGE","BRIGADE",
-    "VOLTAS","CROMPTON","BLUESTARCO","SYMPHONY",
-    "BATAINDIA","ABBOTINDIA","GLAXO","PFIZER",
-    "AUBANK","BANDHANBNK","POLYCAB","KEI",
-    "TATACHEM","GNFC","COROMANDEL","CHAMBALFERT",
-    "JKCEMENT","RAMCOCEM","PIIND","ABFRL",
+    normalize_ticker(t) for t in get_universe_tickers(ROOT_DIR / 'universe' / 'universe.csv')
 ]))
 
 # ── Feature engineering ───────────────────────────────────────────────────
