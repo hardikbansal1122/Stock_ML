@@ -1089,8 +1089,7 @@
       <div class="workspace active" id="ws-today">
         <div class="ws-header">
           <div class="ws-title">Today's Signals</div>
-          <p class="ws-sub">XGBoost model scans 200+ NSE stocks for high-probability 5-day setups. Signals auto-logged
-            to Excel.</p>
+          <p class="ws-sub" id="ws-sub">Loading scan summary...</p>
         </div>
 
         <!-- Controls -->
@@ -1117,8 +1116,8 @@
         <div class="stats-grid cols-4">
           <div class="stat-card">
             <div class="stat-label">Universe</div>
-            <div class="stat-val">200</div>
-            <div class="stat-det">NSE / BSE liquid stocks</div>
+            <div class="stat-val" id="universe-count">—</div>
+            <div class="stat-det" id="universe-detail">Loading universe size...</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Signals Today</div>
@@ -1897,10 +1896,14 @@
 
       switchWs('today');
 
+      const scanUniverseText = (typeof statusData !== 'undefined' && statusData && typeof statusData.total_tickers !== 'undefined')
+        ? `Scanning ${statusData.total_tickers} stocks · ~3 minutes`
+        : 'Scanning stocks · ~3 minutes';
+
       document.getElementById('signals-box').innerHTML = `
   <div class="loading">
     <div class="spin"></div>
-    <div class="spin-txt">Scanning 200+ stocks · ~3 minutes</div>
+    <div class="spin-txt">${scanUniverseText}</div>
   </div>`;
 
       try {
@@ -1917,10 +1920,14 @@
 
           switchWs('today');
 
+          const scanUniverseText = (typeof statusData !== 'undefined' && statusData && typeof statusData.total_tickers !== 'undefined')
+            ? `Scanning ${statusData.total_tickers} stocks · ~3 minutes`
+            : 'Scanning stocks · ~3 minutes';
+
           document.getElementById('signals-box').innerHTML = `
   <div class="loading">
     <div class="spin"></div>
-    <div class="spin-txt">Scanning 200+ stocks · ~3 minutes</div>
+    <div class="spin-txt">${scanUniverseText}</div>
   </div>`;
 
           try {
@@ -2236,6 +2243,20 @@
 
       const dot = document.getElementById('dot');
       const txt = document.getElementById('status-text');
+      const universeCount = document.getElementById('universe-count');
+      const universeDetail = document.getElementById('universe-detail');
+      const wsSub = document.getElementById('ws-sub');
+
+      if (statusData && typeof statusData.total_tickers !== 'undefined') {
+        const totalTickers = statusData.total_tickers;
+        universeCount.textContent = totalTickers;
+        universeDetail.textContent = `${totalTickers} NSE / BSE universe stocks`;
+        wsSub.textContent = `XGBoost model scans ${totalTickers} NSE/BSE stocks for high-probability 5-day setups. Signals auto-logged to Excel.`;
+      } else {
+        universeCount.textContent = '—';
+        universeDetail.textContent = 'Universe size unavailable';
+        wsSub.textContent = 'Loading scan summary...';
+      }
 
       if (statusData && statusData.model_loaded) {
         txt.textContent = `Model Online · ${statusData.total_tickers} tickers`;
