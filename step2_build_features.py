@@ -8,11 +8,17 @@ Features are the same concept as our football model:
   - etc.
 """
 
-import pandas as pd
-import numpy as np
+import sys
 from pathlib import Path
 import warnings
+import numpy as np
+import pandas as pd
+
 warnings.filterwarnings('ignore')
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from universe import load_universe, normalize_ticker
 
 DATA_DIR  = Path('data')
 OUT_FILE  = Path('features.csv')
@@ -20,6 +26,14 @@ OUT_FILE  = Path('features.csv')
 print("="*60)
 print(" STEP 2: Building ML Features")
 print("="*60)
+
+def compute_rsi(series):
+    delta = series.diff()
+    gain = delta.clip(lower=0).rolling(14).mean()
+    loss = (-delta.clip(upper=0)).rolling(14).mean()
+    rs = gain / loss.replace(0, np.nan)
+    return 100 - (100 / (1 + rs))
+
 
 def compute_features(df, ticker):
     """
@@ -37,6 +51,7 @@ def compute_features(df, ticker):
     df['ret_5d']  = df['Close'].pct_change(5)
     df['ret_10d'] = df['Close'].pct_change(10)
     df['ret_20d'] = df['Close'].pct_change(20)
+    df['ret_60d'] = df['Close'].pct_change(60)
 
     # Moving averages
     df['ma5']   = df['Close'].rolling(5).mean()
@@ -57,11 +72,7 @@ def compute_features(df, ticker):
     df['momentum_acceleration'] = df['ret_5d'] - df['ret_10d']
 
     # ── RSI (overbought/oversold) ────────────────────────────────
-    delta = df['Close'].diff()
-    gain  = delta.clip(lower=0).rolling(14).mean()
-    loss  = (-delta.clip(upper=0)).rolling(14).mean()
-    rs    = gain / loss.replace(0, np.nan)
-    df['rsi14'] = 100 - (100 / (1 + rs))
+    df['rsi14'] = compute_rsi(df['Close'])
     df['rsi_normalized'] = (df['rsi14'] - 50) / 50  # center at 0
 
     # ── Volatility features ─────────────────────────────────────
@@ -119,25 +130,48 @@ if NIFTY_INDEX_FILE.exists():
     if 'Adj Close' in nifty_df.columns:
         nifty_df['Close'] = nifty_df['Adj Close']
 
+    nifty_df['nifty_ret_1d']  = nifty_df['Close'].pct_change(1)
     nifty_df['nifty_ret_5d']  = nifty_df['Close'].pct_change(5)
+    nifty_df['nifty_ret_10d'] = nifty_df['Close'].pct_change(10)
     nifty_df['nifty_ret_20d'] = nifty_df['Close'].pct_change(20)
+    nifty_df['nifty_ret_60d'] = nifty_df['Close'].pct_change(60)
     nifty_df['nifty_ma50']    = nifty_df['Close'].rolling(50).mean()
+    nifty_df['nifty_ma200']   = nifty_df['Close'].rolling(200).mean()
     nifty_df['nifty_above_ma50'] = (nifty_df['Close'] > nifty_df['nifty_ma50']).astype(int)
+    nifty_df['nifty_price_vs_ma200'] = nifty_df['Close'] / nifty_df['nifty_ma200'] - 1
+    nifty_df['nifty_ma50_vs_ma200'] = nifty_df['nifty_ma50'] / nifty_df['nifty_ma200'] - 1
+    nifty_df['nifty_volatility_20d'] = nifty_df['Close'].pct_change(1).rolling(20).std()
+    nifty_df['nifty_rsi14'] = compute_rsi(nifty_df['Close'])
 
-    nifty_features = nifty_df[['nifty_ret_5d', 'nifty_ret_20d', 'nifty_above_ma50']].copy()
+    nifty_features = nifty_df[['nifty_ret_1d', 'nifty_ret_5d', 'nifty_ret_10d', 'nifty_ret_20d', 'nifty_ret_60d', 'nifty_above_ma50', 'nifty_rsi14', 'nifty_volatility_20d', 'nifty_price_vs_ma200', 'nifty_ma50_vs_ma200']].copy()
     print('Added Relative Strength Features')
 else:
     nifty_features = pd.DataFrame()
 
 print('Added RelativeVolume feature')
 
-# ── Process all stocks ───────────────────────────────────────────────────
+# ── Process stocks from the universe and existing CSV files ─────────────
 all_features = []
-csv_files    = sorted(DATA_DIR.glob("*.csv"))
+universe_df = load_universe(ROOT / 'universe' / 'universe.csv')
+universe_tickers = [normalize_ticker(t) for t in universe_df['Ticker'].tolist() if str(t).strip()]
+universe_tickers = list(dict.fromkeys(universe_tickers))
 
-print(f"\nProcessing {len(csv_files)} stocks...\n")
+existing_files = []
+missing_tickers = []
+for ticker in universe_tickers:
+    csv_path = DATA_DIR / f"{ticker}.csv"
+    if csv_path.exists():
+        existing_files.append(csv_path)
+    else:
+        missing_tickers.append(ticker)
 
-for i, f in enumerate(csv_files):
+print(f"Universe size         : {len(universe_tickers)}")
+print(f"Existing CSV files    : {len(existing_files)}")
+print(f"Missing CSV files     : {len(missing_tickers)}")
+print(f"Stocks processed      : {len(existing_files)}")
+print()
+
+for i, f in enumerate(sorted(existing_files)):
     ticker = f.stem
     try:
         df = pd.read_csv(f, index_col=0)
@@ -168,15 +202,22 @@ for i, f in enumerate(csv_files):
         if not nifty_features.empty:
             df_feat['rs_ret_5d']  = df_feat['ret_5d']  - df_feat['nifty_ret_5d']
             df_feat['rs_ret_20d'] = df_feat['ret_20d'] - df_feat['nifty_ret_20d']
+            df_feat['rs_ret_60d'] = df_feat['ret_60d'] - df_feat['nifty_ret_60d']
+            df_feat['rs_acceleration'] = df_feat['rs_ret_20d'] - df_feat['rs_ret_60d']
+            df_feat['momentum_persistence'] = (
+                (df_feat['ret_1d'] > df_feat['nifty_ret_1d']).astype(int)
+                .rolling(20)
+                .sum()
+            )
 
         # Drop rows where we don't have enough history
         feature_cols = [c for c in df_feat.columns if c not in
-                        ['ticker','target','future_ret_5d','Open','High','Low','Close','Volume']]
+                        ['ticker','target','future_ret_5d','Open','High','Low','Close','Volume','nifty_ret_1d','nifty_ret_60d']]
         df_feat = df_feat.dropna(subset=feature_cols + ['target'])
         all_features.append(df_feat)
 
         if (i+1) % 20 == 0:
-            print(f"  {i+1}/{len(csv_files)} processed")
+            print(f"  {i+1}/{len(existing_files)} processed")
 
     except Exception as e:
         print(f"  ERROR {ticker}: {e}")
