@@ -18,13 +18,14 @@ from pandas.core import resample
 from pandas.core import resample
 from pandas.core import resample
 from flask import debughelpers
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, jsonify, send_from_directory, request, g
 
 from auth_middleware import require_auth, require_admin, supabase, ADMIN_EMAILS
 import yfinance as yf
 import pandas as pd
 import numpy as np
 import pickle, os, json, subprocess, sys
+from time import perf_counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from datetime import datetime, timedelta, timezone, time
@@ -122,6 +123,73 @@ def get_current_price(ticker):
     return None
 
 
+def _get_perf():
+    if not hasattr(g, 'performance'):
+        g.performance = {}
+    perf = g.performance
+    perf.setdefault('ticker_stats', [])
+    return perf
+
+
+def _fmt_seconds(value):
+    return f"{value:.2f}s"
+
+
+def print_performance_summary(perf):
+    ticker_stats = perf.get('ticker_stats', [])
+    download_samples = [row['download'] for row in ticker_stats if row.get('download', 0.0) > 0]
+    feature_samples = [row['features'] for row in ticker_stats if row.get('features', 0.0) > 0]
+
+    top_slowest = sorted(ticker_stats, key=lambda row: row.get('total', 0.0), reverse=True)[:5]
+    top_downloads = sorted(ticker_stats, key=lambda row: row.get('download', 0.0), reverse=True)[:5]
+
+    total_auth = perf.get('authentication', 0.0)
+    total_lookup = perf.get('supabase_user_lookup', 0.0)
+    total_duplicate = perf.get('duplicate_scan_check', 0.0)
+    total_run = perf.get('run_scanner_total', 0.0)
+    total_download = perf.get('download_total', 0.0)
+    total_features = perf.get('feature_total', 0.0)
+    total_prediction = perf.get('prediction_total', 0.0)
+    total_db = perf.get('database_writes', 0.0)
+    total_response = perf.get('response_generation', 0.0)
+    total_time = (
+        total_auth
+        + total_lookup
+        + total_duplicate
+        + total_run
+        + total_download
+        + total_features
+        + total_prediction
+        + total_db
+        + total_response
+    )
+
+    avg_download = (sum(download_samples) / len(download_samples)) if download_samples else 0.0
+    avg_feature = (sum(feature_samples) / len(feature_samples)) if feature_samples else 0.0
+
+    print("\n=========================")
+    print("Performance Summary")
+    print("=========================")
+    print(f"Authentication .......... {_fmt_seconds(total_auth)}")
+    print(f"Supabase user lookup .... {_fmt_seconds(total_lookup)}")
+    print(f"Duplicate scan check .... {_fmt_seconds(total_duplicate)}")
+    print(f"Total run_scanner() ..... {_fmt_seconds(total_run)}")
+    print(f"Download ............... {_fmt_seconds(total_download)}")
+    print(f"Features ............... {_fmt_seconds(total_features)}")
+    print(f"Prediction .............. {_fmt_seconds(total_prediction)}")
+    print(f"Database writes ......... {_fmt_seconds(total_db)}")
+    print(f"Response generation ..... {_fmt_seconds(total_response)}")
+    print(f"Total .................. {_fmt_seconds(total_time)}")
+    print("\nTop 5 slowest tickers")
+    for row in top_slowest:
+        print(f"- {row.get('ticker')} : {_fmt_seconds(row.get('total', 0.0))}")
+    print("\nTop 5 longest downloads")
+    for row in top_downloads:
+        print(f"- {row.get('ticker')} : {_fmt_seconds(row.get('download', 0.0))}")
+    print(f"\nAverage download time : {_fmt_seconds(avg_download)}")
+    print(f"Average feature time   : {_fmt_seconds(avg_feature)}")
+
+
 
 def auto_resolve_trades():
 
@@ -203,23 +271,36 @@ def auto_resolve_trades():
 @app.route('/api/scan')
 @require_auth
 def api_scan():
+    perf = _get_perf()
     uid = request.user.get('uid')
     trading_date = get_trading_date()
     
     # Check if user already scanned today
+    duplicate_start = perf_counter()
     existing_scan = (supabase
         .table('user_scans')
         .select('id')
         .eq('uid', uid)
         .eq('trading_date', str(trading_date))
         .execute())
+    duplicate_end = perf_counter()
+    perf['duplicate_scan_check'] = perf.get('duplicate_scan_check', 0.0) + (duplicate_end - duplicate_start)
     if existing_scan.data:
-        return jsonify({"already_scanned": True, "message": "You have already generated today's picks."})
+        response_start = perf_counter()
+        response = jsonify({"already_scanned": True, "message": "You have already generated today's picks."})
+        response_end = perf_counter()
+        perf['response_generation'] = perf.get('response_generation', 0.0) + (response_end - response_start)
+        print_performance_summary(perf)
+        return response
     
     threshold = float(request.args.get('threshold', 0.60))
+    run_start = perf_counter()
     result = run_scanner(threshold=threshold)
+    run_end = perf_counter()
+    perf['run_scanner_total'] = perf.get('run_scanner_total', 0.0) + (run_end - run_start)
     
     if supabase and uid:
+        db_start = perf_counter()
         scan_time = datetime.now(timezone.utc).isoformat()
         for sig in result.get('signals', []):
             ticker = sig.get('ticker')
@@ -253,10 +334,17 @@ def api_scan():
             'trading_date': str(trading_date),
             'created_at': scan_time
         }).execute()
+        db_end = perf_counter()
+        perf['database_writes'] = perf.get('database_writes', 0.0) + (db_end - db_start)
     
     # No longer write to a global file
     # save_last_scan(result)  # removed
-    return jsonify(result)
+    response_start = perf_counter()
+    response = jsonify(result)
+    response_end = perf_counter()
+    perf['response_generation'] = perf.get('response_generation', 0.0) + (response_end - response_start)
+    print_performance_summary(perf)
+    return response
 
 # Updated /api/last_scan: return only this user's most recent scan results
 @app.route('/api/last_scan')
@@ -314,18 +402,35 @@ def load_last_scan():
 
 # ── Scanner ───────────────────────────────────────────────────────────────
 def run_scanner(threshold=0.60):
+    perf = _get_perf()
     if MODEL is None:
         return {"error": "Model not loaded. Run step3_train_model.py first."}
     signals, processed, failed = [], 0, 0
     for ticker in NIFTY_TICKERS:
+        ticker_start = perf_counter()
+        ticker_download = 0.0
+        ticker_features = 0.0
+        ticker_prediction = 0.0
         try:
+            download_start = perf_counter()
             df = fetch_stock(ticker)
+            download_end = perf_counter()
+            ticker_download = download_end - download_start
+            perf['download_total'] = perf.get('download_total', 0.0) + ticker_download
             if df is None: failed += 1; continue
+            feature_start = perf_counter()
             df   = compute_features(df)
+            feature_end = perf_counter()
+            ticker_features = feature_end - feature_start
+            perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
             last = df.iloc[-1]
             feat = last[FEATURE_COLS].values.reshape(1,-1)
             if np.isnan(feat).any(): continue
+            prediction_start = perf_counter()
             conf = float(MODEL.predict_proba(feat)[0][1])
+            prediction_end = perf_counter()
+            ticker_prediction = prediction_end - prediction_start
+            perf['prediction_total'] = perf.get('prediction_total', 0.0) + ticker_prediction
             processed += 1
             if conf >= threshold:
                 signals.append({'ticker':ticker,'confidence':conf,
@@ -334,6 +439,15 @@ def run_scanner(threshold=0.60):
                     'momentum_5d':float(last['ret_5d']*100),
                     'price_vs_ma20':float(last['price_vs_ma20']*100)})
         except: failed += 1
+        finally:
+            ticker_end = perf_counter()
+            perf['ticker_stats'].append({
+                'ticker': ticker,
+                'download': ticker_download,
+                'features': ticker_features,
+                'prediction': ticker_prediction,
+                'total': ticker_end - ticker_start,
+            })
     signals.sort(key=lambda x: x['confidence'], reverse=True)
     return {'signals':signals,'processed':processed,'failed':failed,
             'total':len(NIFTY_TICKERS),

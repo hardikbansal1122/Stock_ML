@@ -1,7 +1,8 @@
 import os
 import json
 import functools
-from flask import request, jsonify
+from time import perf_counter
+from flask import request, jsonify, g
 from firebase_admin import auth, credentials, initialize_app
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -39,13 +40,19 @@ if SUPABASE_URL and SUPABASE_SERVICE_KEY:
 def require_auth(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
+        if not hasattr(g, "performance"):
+            g.performance = {}
+
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return jsonify({"error": "Unauthorized"}), 401
         
         token = auth_header.split(" ")[1]
         try:
+            auth_start = perf_counter()
             decoded_token = auth.verify_id_token(token)
+            auth_end = perf_counter()
+            g.performance["authentication"] = g.performance.get("authentication", 0.0) + (auth_end - auth_start)
             print("=" * 50)
             print("EMAIL FROM FIREBASE:", decoded_token.get("email"))
             print("FULL TOKEN:", decoded_token)
@@ -56,6 +63,7 @@ def require_auth(f):
 
             if supabase and email:
                 # Use .ilike for case-insensitive email search
+                lookup_start = perf_counter()
                 response = (
                     supabase
                     .table("approved_users")
@@ -63,6 +71,8 @@ def require_auth(f):
                     .ilike("email", email.strip())
                     .execute()
                 )
+                lookup_end = perf_counter()
+                g.performance["supabase_user_lookup"] = g.performance.get("supabase_user_lookup", 0.0) + (lookup_end - lookup_start)
 
                 print("FULL TABLE:", response.data)
                 print("EMAIL:", repr(email))
