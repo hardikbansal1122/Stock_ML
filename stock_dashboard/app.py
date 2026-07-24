@@ -44,6 +44,7 @@ MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
 MAX_DOWNLOAD_WORKERS = 12
+DEV_BYPASS_SCAN_LIMIT = True
 
 sys.path.insert(0, str(ROOT_DIR))
 from universe import get_universe_tickers, normalize_ticker
@@ -296,7 +297,7 @@ def api_scan():
         .execute())
     duplicate_end = perf_counter()
     perf['duplicate_scan_check'] = perf.get('duplicate_scan_check', 0.0) + (duplicate_end - duplicate_start)
-    if existing_scan.data:
+    if not DEV_BYPASS_SCAN_LIMIT and existing_scan.data:
         response_start = perf_counter()
         response = jsonify({"already_scanned": True, "message": "You have already generated today's picks."})
         response_end = perf_counter()
