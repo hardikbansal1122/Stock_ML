@@ -43,7 +43,7 @@ ROOT_DIR       = BASE_DIR.parent
 MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
-MAX_DOWNLOAD_WORKERS = 8
+MAX_DOWNLOAD_WORKERS = 12
 
 sys.path.insert(0, str(ROOT_DIR))
 from universe import get_universe_tickers, normalize_ticker
