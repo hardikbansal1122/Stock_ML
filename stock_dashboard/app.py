@@ -659,6 +659,11 @@ def api_active_trades():
 @require_auth
 def api_can_scan():
 
+    if DEV_BYPASS_SCAN_LIMIT:
+        return jsonify({
+            'can_scan': True
+        })
+
     uid = request.user.get('uid')
     trading_date = get_trading_date()
 
