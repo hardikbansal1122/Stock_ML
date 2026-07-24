@@ -17,6 +17,7 @@ from pandas.core import resample
 from pandas.core import resample
 from pandas.core import resample
 from pandas.core import resample
+from concurrent.futures import ThreadPoolExecutor
 from flask import debughelpers
 from flask import Flask, jsonify, send_from_directory, request, g
 
@@ -42,6 +43,7 @@ ROOT_DIR       = BASE_DIR.parent
 MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
+MAX_DOWNLOAD_WORKERS = 8
 
 sys.path.insert(0, str(ROOT_DIR))
 from universe import get_universe_tickers, normalize_ticker
@@ -110,6 +112,12 @@ def fetch_stock(ticker):
         except: continue
     return None
 
+def fetch_stock_with_timing(ticker):
+    download_start = perf_counter()
+    df = fetch_stock(ticker)
+    download_end = perf_counter()
+    return ticker, df, download_end - download_start
+
 def get_current_price(ticker):
     for suffix in ['.NS','.BO']:
         try:
@@ -152,6 +160,7 @@ def print_performance_summary(perf):
     total_prediction = perf.get('prediction_total', 0.0)
     total_db = perf.get('database_writes', 0.0)
     total_response = perf.get('response_generation', 0.0)
+    parallel_download_time = perf.get('download_parallel_time', 0.0)
     total_time = (
         total_auth
         + total_lookup
@@ -179,6 +188,8 @@ def print_performance_summary(perf):
     print(f"Prediction .............. {_fmt_seconds(total_prediction)}")
     print(f"Database writes ......... {_fmt_seconds(total_db)}")
     print(f"Response generation ..... {_fmt_seconds(total_response)}")
+    print(f"Sequential download .... {_fmt_seconds(total_download)}")
+    print(f"Parallel download ...... {_fmt_seconds(parallel_download_time)}")
     print(f"Total .................. {_fmt_seconds(total_time)}")
     print("\nTop 5 slowest tickers")
     for row in top_slowest:
@@ -186,7 +197,7 @@ def print_performance_summary(perf):
     print("\nTop 5 longest downloads")
     for row in top_downloads:
         print(f"- {row.get('ticker')} : {_fmt_seconds(row.get('download', 0.0))}")
-    print(f"\nAverage download time : {_fmt_seconds(avg_download)}")
+    print(f"\nAverage download time per ticker : {_fmt_seconds(avg_download)}")
     print(f"Average feature time   : {_fmt_seconds(avg_feature)}")
 
 
@@ -406,16 +417,18 @@ def run_scanner(threshold=0.60):
     if MODEL is None:
         return {"error": "Model not loaded. Run step3_train_model.py first."}
     signals, processed, failed = [], 0, 0
-    for ticker in NIFTY_TICKERS:
+
+    download_phase_start = perf_counter()
+    with ThreadPoolExecutor(max_workers=MAX_DOWNLOAD_WORKERS) as executor:
+        download_results = list(executor.map(fetch_stock_with_timing, NIFTY_TICKERS))
+    download_phase_end = perf_counter()
+    perf['download_parallel_time'] = perf.get('download_parallel_time', 0.0) + (download_phase_end - download_phase_start)
+
+    for ticker, df, ticker_download in download_results:
         ticker_start = perf_counter()
-        ticker_download = 0.0
         ticker_features = 0.0
         ticker_prediction = 0.0
         try:
-            download_start = perf_counter()
-            df = fetch_stock(ticker)
-            download_end = perf_counter()
-            ticker_download = download_end - download_start
             perf['download_total'] = perf.get('download_total', 0.0) + ticker_download
             if df is None: failed += 1; continue
             feature_start = perf_counter()
