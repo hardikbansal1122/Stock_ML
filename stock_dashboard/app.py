@@ -44,6 +44,7 @@ MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
 MAX_DOWNLOAD_WORKERS = 8
+BATCH_SIZE = 25
 DEV_BYPASS_SCAN_LIMIT = True
 
 sys.path.insert(0, str(ROOT_DIR))
@@ -112,6 +113,93 @@ def fetch_stock(ticker):
                 return df[['Open','High','Low','Close','Volume']].dropna()
         except: continue
     return None
+
+
+def _download_stock_frame(symbol):
+    try:
+        df = yf.download(symbol, period="6mo", progress=False, auto_adjust=True)
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        if len(df) > 60:
+            return df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+    except:
+        return None
+    return None
+
+
+def _extract_batch_ticker_frame(batch_df, symbol):
+    if batch_df is None or getattr(batch_df, 'empty', True):
+        return None
+
+    try:
+        ticker_df = None
+        if isinstance(batch_df.columns, pd.MultiIndex):
+            try:
+                ticker_df = batch_df[symbol]
+            except Exception:
+                try:
+                    ticker_df = batch_df.xs(symbol, axis=1, level=0)
+                except Exception:
+                    ticker_df = batch_df.xs(symbol, axis=1, level=1)
+        else:
+            ticker_df = batch_df
+
+        if ticker_df is None or ticker_df.empty:
+            return None
+        if isinstance(ticker_df.columns, pd.MultiIndex):
+            ticker_df.columns = ticker_df.columns.get_level_values(0)
+        if len(ticker_df) > 60:
+            return ticker_df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+    except:
+        return None
+    return None
+
+
+def fetch_stock_batch(tickers):
+    if not tickers:
+        return [], 0.0
+
+    batch_symbols = [f"{ticker}.NS" for ticker in tickers]
+    batch_start = perf_counter()
+    try:
+        batch_df = yf.download(
+            batch_symbols,
+            period="6mo",
+            progress=False,
+            auto_adjust=True,
+            group_by="ticker",
+        )
+    except:
+        batch_df = None
+    ns_download_time = perf_counter() - batch_start
+
+    results = []
+    fallback_tickers = []
+    per_ticker_ns_time = ns_download_time / len(tickers)
+
+    for ticker, symbol in zip(tickers, batch_symbols):
+        df = _extract_batch_ticker_frame(batch_df, symbol)
+        if df is None:
+            fallback_tickers.append(ticker)
+        results.append([ticker, df, per_ticker_ns_time])
+
+    del batch_df
+
+    bo_download_time = 0.0
+    if fallback_tickers:
+        result_by_ticker = {row[0]: row for row in results}
+        for ticker in fallback_tickers:
+            bo_start = perf_counter()
+            df = _download_stock_frame(f"{ticker}.BO")
+            bo_end = perf_counter()
+            fallback_time = bo_end - bo_start
+            bo_download_time += fallback_time
+            row = result_by_ticker[ticker]
+            row[1] = df
+            row[2] += fallback_time
+
+    return [tuple(row) for row in results], ns_download_time + bo_download_time
+
 
 def fetch_stock_with_timing(ticker):
     download_start = perf_counter()
@@ -419,49 +507,48 @@ def run_scanner(threshold=0.60):
         return {"error": "Model not loaded. Run step3_train_model.py first."}
     signals, processed, failed = [], 0, 0
 
-    download_phase_start = perf_counter()
-    with ThreadPoolExecutor(max_workers=MAX_DOWNLOAD_WORKERS) as executor:
-        download_results = list(executor.map(fetch_stock_with_timing, NIFTY_TICKERS))
-    download_phase_end = perf_counter()
-    perf['download_parallel_time'] = perf.get('download_parallel_time', 0.0) + (download_phase_end - download_phase_start)
+    for batch_start in range(0, len(NIFTY_TICKERS), BATCH_SIZE):
+        batch_tickers = NIFTY_TICKERS[batch_start:batch_start + BATCH_SIZE]
+        download_results, batch_download_time = fetch_stock_batch(batch_tickers)
+        perf['download_parallel_time'] = perf.get('download_parallel_time', 0.0) + batch_download_time
 
-    for ticker, df, ticker_download in download_results:
-        ticker_start = perf_counter()
-        ticker_features = 0.0
-        ticker_prediction = 0.0
-        try:
-            perf['download_total'] = perf.get('download_total', 0.0) + ticker_download
-            if df is None: failed += 1; continue
-            feature_start = perf_counter()
-            df   = compute_features(df)
-            feature_end = perf_counter()
-            ticker_features = feature_end - feature_start
-            perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
-            last = df.iloc[-1]
-            feat = last[FEATURE_COLS].values.reshape(1,-1)
-            if np.isnan(feat).any(): continue
-            prediction_start = perf_counter()
-            conf = float(MODEL.predict_proba(feat)[0][1])
-            prediction_end = perf_counter()
-            ticker_prediction = prediction_end - prediction_start
-            perf['prediction_total'] = perf.get('prediction_total', 0.0) + ticker_prediction
-            processed += 1
-            if conf >= threshold:
-                signals.append({'ticker':ticker,'confidence':conf,
-                    'close':float(last['Close']),'rsi':float(last['rsi14']),
-                    'volume_ratio':float(last['volume_ratio']),
-                    'momentum_5d':float(last['ret_5d']*100),
-                    'price_vs_ma20':float(last['price_vs_ma20']*100)})
-        except: failed += 1
-        finally:
-            ticker_end = perf_counter()
-            perf['ticker_stats'].append({
-                'ticker': ticker,
-                'download': ticker_download,
-                'features': ticker_features,
-                'prediction': ticker_prediction,
-                'total': ticker_end - ticker_start,
-            })
+        for ticker, df, ticker_download in download_results:
+            ticker_start = perf_counter()
+            ticker_features = 0.0
+            ticker_prediction = 0.0
+            try:
+                perf['download_total'] = perf.get('download_total', 0.0) + ticker_download
+                if df is None: failed += 1; continue
+                feature_start = perf_counter()
+                df   = compute_features(df)
+                feature_end = perf_counter()
+                ticker_features = feature_end - feature_start
+                perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
+                last = df.iloc[-1]
+                feat = last[FEATURE_COLS].values.reshape(1,-1)
+                if np.isnan(feat).any(): continue
+                prediction_start = perf_counter()
+                conf = float(MODEL.predict_proba(feat)[0][1])
+                prediction_end = perf_counter()
+                ticker_prediction = prediction_end - prediction_start
+                perf['prediction_total'] = perf.get('prediction_total', 0.0) + ticker_prediction
+                processed += 1
+                if conf >= threshold:
+                    signals.append({'ticker':ticker,'confidence':conf,
+                        'close':float(last['Close']),'rsi':float(last['rsi14']),
+                        'volume_ratio':float(last['volume_ratio']),
+                        'momentum_5d':float(last['ret_5d']*100),
+                        'price_vs_ma20':float(last['price_vs_ma20']*100)})
+            except: failed += 1
+            finally:
+                ticker_end = perf_counter()
+                perf['ticker_stats'].append({
+                    'ticker': ticker,
+                    'download': ticker_download,
+                    'features': ticker_features,
+                    'prediction': ticker_prediction,
+                    'total': (ticker_end - ticker_start) + ticker_download,
+                })
     signals.sort(key=lambda x: x['confidence'], reverse=True)
     return {'signals':signals,'processed':processed,'failed':failed,
             'total':len(NIFTY_TICKERS),
