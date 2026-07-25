@@ -67,7 +67,6 @@ NIFTY_TICKERS = list(dict.fromkeys([
 
 # ── Feature engineering ───────────────────────────────────────────────────
 def compute_features(df):
-    df = df.copy()
     df['ret_1d']  = df['Close'].pct_change(1)
     df['ret_3d']  = df['Close'].pct_change(3)
     df['ret_5d']  = df['Close'].pct_change(5)
@@ -94,7 +93,7 @@ def compute_features(df):
     df['vol_ma20']       = df['Volume'].rolling(20).mean()
     df['volume_ratio']   = df['Volume']/df['vol_ma20']
     df['volume_trend']   = df['Volume'].rolling(5).mean()/df['vol_ma20']
-    bb_mid = df['Close'].rolling(20).mean()
+    bb_mid = df['ma20']
     bb_std = df['Close'].rolling(20).std()
     df['bb_position'] = (df['Close']-bb_mid)/(2*bb_std)
     df['up_days_5']   = (df['ret_1d']>0).rolling(5).sum()/5
@@ -524,8 +523,7 @@ def run_scanner(threshold=0.60):
                 feature_end = perf_counter()
                 ticker_features = feature_end - feature_start
                 perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
-                last = df.iloc[-1]
-                feat = last[FEATURE_COLS].values.reshape(1,-1)
+                feat = df[FEATURE_COLS].to_numpy()[-1:]
                 if np.isnan(feat).any(): continue
                 prediction_start = perf_counter()
                 conf = float(MODEL.predict_proba(feat)[0][1])
@@ -535,10 +533,10 @@ def run_scanner(threshold=0.60):
                 processed += 1
                 if conf >= threshold:
                     signals.append({'ticker':ticker,'confidence':conf,
-                        'close':float(last['Close']),'rsi':float(last['rsi14']),
-                        'volume_ratio':float(last['volume_ratio']),
-                        'momentum_5d':float(last['ret_5d']*100),
-                        'price_vs_ma20':float(last['price_vs_ma20']*100)})
+                        'close':float(df['Close'].iat[-1]),'rsi':float(df['rsi14'].iat[-1]),
+                        'volume_ratio':float(df['volume_ratio'].iat[-1]),
+                        'momentum_5d':float(df['ret_5d'].iat[-1]*100),
+                        'price_vs_ma20':float(df['price_vs_ma20'].iat[-1]*100)})
             except: failed += 1
             finally:
                 ticker_end = perf_counter()
