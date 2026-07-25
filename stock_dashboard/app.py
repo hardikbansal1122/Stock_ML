@@ -44,7 +44,7 @@ MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
 MAX_DOWNLOAD_WORKERS = 8
-BATCH_SIZE = 50
+BATCH_SIZE = 25
 DEV_BYPASS_SCAN_LIMIT = True
 
 sys.path.insert(0, str(ROOT_DIR))
@@ -72,33 +72,40 @@ def compute_features(df):
     df['ret_5d']  = df['Close'].pct_change(5)
     df['ret_10d'] = df['Close'].pct_change(10)
     df['ret_20d'] = df['Close'].pct_change(20)
+
     df['ma5']  = df['Close'].rolling(5).mean()
     df['ma10'] = df['Close'].rolling(10).mean()
     df['ma20'] = df['Close'].rolling(20).mean()
     df['ma50'] = df['Close'].rolling(50).mean()
-    df['price_vs_ma5']  = (df['Close']-df['ma5'])/df['ma5']
-    df['price_vs_ma20'] = (df['Close']-df['ma20'])/df['ma20']
-    df['price_vs_ma50'] = (df['Close']-df['ma50'])/df['ma50']
-    df['ma5_vs_ma20']   = (df['ma5']-df['ma20'])/df['ma20']
-    df['ma10_vs_ma50']  = (df['ma10']-df['ma50'])/df['ma50']
+
     delta = df['Close'].diff()
     gain  = delta.clip(lower=0).rolling(14).mean()
     loss  = (-delta.clip(upper=0)).rolling(14).mean()
     rs    = gain / loss.replace(0, np.nan)
     df['rsi14']          = 100-(100/(1+rs))
     df['rsi_normalized'] = (df['rsi14']-50)/50
+
     df['volatility_5d']  = df['ret_1d'].rolling(5).std()
     df['volatility_20d'] = df['ret_1d'].rolling(20).std()
+
     df['hl_range']       = (df['High']-df['Low'])/df['Close']
     df['vol_ma20']       = df['Volume'].rolling(20).mean()
     df['volume_ratio']   = df['Volume']/df['vol_ma20']
     df['volume_trend']   = df['Volume'].rolling(5).mean()/df['vol_ma20']
+
+    df['up_days_5']   = (df['ret_1d']>0).rolling(5).sum()/5
+    df['up_days_10']  = (df['ret_1d']>0).rolling(10).sum()/10
+
+    df['price_vs_ma5']  = (df['Close']-df['ma5'])/df['ma5']
+    df['price_vs_ma20'] = (df['Close']-df['ma20'])/df['ma20']
+    df['price_vs_ma50'] = (df['Close']-df['ma50'])/df['ma50']
+    df['ma5_vs_ma20']   = (df['ma5']-df['ma20'])/df['ma20']
+    df['ma10_vs_ma50']  = (df['ma10']-df['ma50'])/df['ma50']
+    df['gap']         = (df['Open']-df['Close'].shift(1))/df['Close'].shift(1)
+
     bb_mid = df['ma20']
     bb_std = df['Close'].rolling(20).std()
     df['bb_position'] = (df['Close']-bb_mid)/(2*bb_std)
-    df['up_days_5']   = (df['ret_1d']>0).rolling(5).sum()/5
-    df['up_days_10']  = (df['ret_1d']>0).rolling(10).sum()/10
-    df['gap']         = (df['Open']-df['Close'].shift(1))/df['Close'].shift(1)
     return df
 
 def fetch_stock(ticker):
@@ -522,6 +529,9 @@ def run_scanner(threshold=0.60):
     if MODEL is None:
         return {"error": "Model not loaded. Run step3_train_model.py first."}
     signals, processed, failed = [], 0, 0
+    model = MODEL
+    feature_cols = FEATURE_COLS
+    ticker_stats_append = perf['ticker_stats'].append
 
     for batch_start in range(0, len(NIFTY_TICKERS), BATCH_SIZE):
         batch_tickers = NIFTY_TICKERS[batch_start:batch_start + BATCH_SIZE]
@@ -540,24 +550,25 @@ def run_scanner(threshold=0.60):
                 feature_end = perf_counter()
                 ticker_features = feature_end - feature_start
                 perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
-                feat = df[FEATURE_COLS].to_numpy()[-1:]
+                last_row = df.iloc[-1]
+                feat = last_row[feature_cols].to_numpy().reshape(1, -1)
                 if np.isnan(feat).any(): continue
                 prediction_start = perf_counter()
-                conf = float(MODEL.predict_proba(feat)[0][1])
+                conf = float(model.predict_proba(feat)[0][1])
                 prediction_end = perf_counter()
                 ticker_prediction = prediction_end - prediction_start
                 perf['prediction_total'] = perf.get('prediction_total', 0.0) + ticker_prediction
                 processed += 1
                 if conf >= threshold:
                     signals.append({'ticker':ticker,'confidence':conf,
-                        'close':float(df['Close'].iat[-1]),'rsi':float(df['rsi14'].iat[-1]),
-                        'volume_ratio':float(df['volume_ratio'].iat[-1]),
-                        'momentum_5d':float(df['ret_5d'].iat[-1]*100),
-                        'price_vs_ma20':float(df['price_vs_ma20'].iat[-1]*100)})
+                        'close':float(last_row['Close']),'rsi':float(last_row['rsi14']),
+                        'volume_ratio':float(last_row['volume_ratio']),
+                        'momentum_5d':float(last_row['ret_5d']*100),
+                        'price_vs_ma20':float(last_row['price_vs_ma20']*100)})
             except: failed += 1
             finally:
                 ticker_end = perf_counter()
-                perf['ticker_stats'].append({
+                ticker_stats_append({
                     'ticker': ticker,
                     'download': ticker_download,
                     'features': ticker_features,
