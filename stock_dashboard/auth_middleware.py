@@ -9,6 +9,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+LOCAL_DEV = os.getenv("LOCAL_DEV", "false").lower() == "true"
+print(f"LOCAL_DEV = {LOCAL_DEV}")
+
+
+def _set_local_dev_user():
+    request.user = {
+        "email": "local@stockml.dev",
+        "uid": "local-dev",
+        "name": "Local Dev",
+    }
+
 # Initialize Firebase Admin
 try:
     firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
@@ -42,6 +53,10 @@ def require_auth(f):
     def decorated_function(*args, **kwargs):
         if not hasattr(g, "performance"):
             g.performance = {}
+
+        if LOCAL_DEV:
+            _set_local_dev_user()
+            return f(*args, **kwargs)
 
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
@@ -102,6 +117,10 @@ def require_auth(f):
 def require_admin(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
+        if LOCAL_DEV:
+            _set_local_dev_user()
+            return f(*args, **kwargs)
+
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return jsonify({"error": "Unauthorized"}), 401

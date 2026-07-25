@@ -44,7 +44,7 @@ MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
 MAX_DOWNLOAD_WORKERS = 8
-BATCH_SIZE = 25
+BATCH_SIZE = 50
 DEV_BYPASS_SCAN_LIMIT = True
 
 sys.path.insert(0, str(ROOT_DIR))
@@ -158,6 +158,7 @@ def fetch_stock_batch(tickers):
     if not tickers:
         return [], 0.0
 
+    perf = _get_perf()
     batch_symbols = [f"{ticker}.NS" for ticker in tickers]
     batch_start = perf_counter()
     try:
@@ -174,12 +175,15 @@ def fetch_stock_batch(tickers):
 
     results = []
     fallback_tickers = []
+    ns_success_count = 0
     per_ticker_ns_time = ns_download_time / len(tickers)
 
     for ticker, symbol in zip(tickers, batch_symbols):
         df = _extract_batch_ticker_frame(batch_df, symbol)
         if df is None:
             fallback_tickers.append(ticker)
+        else:
+            ns_success_count += 1
         results.append([ticker, df, per_ticker_ns_time])
 
     del batch_df
@@ -197,7 +201,20 @@ def fetch_stock_batch(tickers):
             row[1] = df
             row[2] += fallback_time
 
-    return [tuple(row) for row in results], ns_download_time + bo_download_time
+    batch_time = ns_download_time + bo_download_time
+    perf['download_batch_count'] = perf.get('download_batch_count', 0) + 1
+    perf['download_ns_success_total'] = perf.get('download_ns_success_total', 0) + ns_success_count
+    perf['download_bo_retry_count_total'] = perf.get('download_bo_retry_count_total', 0) + len(fallback_tickers)
+    perf['download_bo_retry_time_total'] = perf.get('download_bo_retry_time_total', 0.0) + bo_download_time
+    perf['download_batch_time_total'] = perf.get('download_batch_time_total', 0.0) + batch_time
+
+    print(
+        f"[DOWNLOAD] batch={perf['download_batch_count']} size={len(tickers)} "
+        f"time={_fmt_seconds(batch_time)} ns_ok={ns_success_count} "
+        f"bo_retries={len(fallback_tickers)} bo_time={_fmt_seconds(bo_download_time)}"
+    )
+
+    return [tuple(row) for row in results], batch_time
 
 
 def fetch_stock_with_timing(ticker):
@@ -547,6 +564,13 @@ def run_scanner(threshold=0.60):
                     'prediction': ticker_prediction,
                     'total': (ticker_end - ticker_start) + ticker_download,
                 })
+    print("\nDownload Profile Summary")
+    print(f"Batches processed ..... {perf.get('download_batch_count', 0)}")
+    print(f"Batch size ............ {BATCH_SIZE}")
+    print(f".NS successes ......... {perf.get('download_ns_success_total', 0)}")
+    print(f".BO retries ........... {perf.get('download_bo_retry_count_total', 0)}")
+    print(f".BO retry time ........ {_fmt_seconds(perf.get('download_bo_retry_time_total', 0.0))}")
+    print(f"Batch time total ...... {_fmt_seconds(perf.get('download_batch_time_total', 0.0))}")
     signals.sort(key=lambda x: x['confidence'], reverse=True)
     return {'signals':signals,'processed':processed,'failed':failed,
             'total':len(NIFTY_TICKERS),
