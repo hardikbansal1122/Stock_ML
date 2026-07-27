@@ -32,36 +32,17 @@ DATA_DIR = ROOT / 'data'
 RESULTS_CSV = ROOT / 'walkforward_results.csv'
 REPORT_MD = ROOT / 'WALKFORWARD_REPORT.md'
 
+# Columns that must never be used as predictors
 EXCLUDED_FEATURES = {
-    'Date','ticker','target','future_ret_5d','ret_5d_net',
-    'Open','High','Low','Close','Volume'
+    'Date', 'ticker', 'target', 'future_ret_5d', 'ret_5d_net',
+    'Open', 'High', 'Low', 'Close', 'Volume',
+    'high_52w', 'low_52w',
 }
 
-TEMPORARILY_EXCLUDED_FEATURES = {
-    'ret_60d',
-    'ma5','ma10','ma20','ma50',
-    'momentum_acceleration',
-    'rsi14',
-    'vol_ma20',
-    'nifty_ret_1d',
-    'nifty_ret_10d',
-    'nifty_ret_60d',
-    'nifty_rsi14',
-    'nifty_volatility_20d',
-    'nifty_price_vs_ma200',
-    'nifty_ma50_vs_ma200',
-    # --- PHASE 1 CLEANUP ---
-    'rsi_normalized', 'price_vs_ma5', 'gap', 'price_vs_ma20',
-    'ma5_vs_ma20', 'volume_trend', 'rs_ret_5d', 'volume_ratio',
-    'ret_3d', 'momentum_persistence', 'ret_1d', 'relative_volume',
-    'up_days_10', 'up_days_5'
-}
-
-df_cols = pd.read_csv(FEATURE_FILE, nrows=0).columns.tolist()
-FEATURE_COLS = [
-    col for col in df_cols
-    if col not in EXCLUDED_FEATURES | TEMPORARILY_EXCLUDED_FEATURES
-]
+# Auto-discover every numeric predictor from the CSV header
+df_cols_full = pd.read_csv(FEATURE_FILE, nrows=1)
+numeric_cols_all = df_cols_full.select_dtypes(include='number').columns.tolist()
+FEATURE_COLS = [col for col in numeric_cols_all if col not in EXCLUDED_FEATURES]
 
 print(f"Walkforward feature count: {len(FEATURE_COLS)}")
 
@@ -269,16 +250,31 @@ def simulate_portfolio(trades_df, prices, rank_by_pred_return=False):
 
 
 def get_fold_boundaries(dates):
+    """Generate walk‑forward fold boundaries.
+
+    ``dates`` can be a list, ``pd.Series`` or ``pd.DatetimeIndex`` of sorted dates.
+    The function now uses positional indexing (``iloc``) to avoid pandas label‑based
+    lookup issues that caused ``KeyError: -1`` when the series was indexed with
+    negative numbers.
+    """
+    # Ensure we have a proper DatetimeIndex for reliable positional indexing
+    dates = pd.DatetimeIndex(dates)
+
     folds = []
     min_date = dates[0]
     max_date = dates[-1]
     train_start = min_date
     while True:
+        # Desired end of the training window (inclusive)
         train_end_target = train_start + pd.DateOffset(months=TRAIN_MONTHS) - pd.Timedelta(days=1)
-        train_end = dates[dates.searchsorted(train_end_target, side='right') - 1] if dates.searchsorted(train_end_target, side='right') > 0 else None
-        if train_end is None or train_end < train_start:
+        # Locate the last date <= target using searchsorted (returns position)
+        pos = dates.searchsorted(train_end_target, side='right') - 1
+        if pos < 0:
             break
-        train_end_idx = dates.get_loc(train_end)
+        train_end = dates[pos]
+        if train_end < train_start:
+            break
+        train_end_idx = pos
         test_start_idx = train_end_idx + GAP_DAYS + 1
         if test_start_idx >= len(dates):
             break
@@ -286,15 +282,17 @@ def get_fold_boundaries(dates):
         test_end_target = test_start + pd.DateOffset(months=TEST_MONTHS) - pd.Timedelta(days=1)
         if test_end_target > max_date:
             break
-        test_end = dates[dates.searchsorted(test_end_target, side='right') - 1]
-        if test_end < test_start:
+        test_end_pos = dates.searchsorted(test_end_target, side='right') - 1
+        if test_end_pos < test_start_idx:
             break
+        test_end = dates[test_end_pos]
         folds.append({
             'train_start': train_start,
             'train_end': train_end,
             'test_start': test_start,
             'test_end': test_end,
         })
+        # Move the training window forward
         train_start = train_start + pd.DateOffset(months=STEP_MONTHS)
         if train_start > max_date:
             break

@@ -23,34 +23,20 @@ df = pd.read_csv('features.csv')
 df['Date'] = pd.to_datetime(df['Date'])
 print(f"\n Loaded {len(df):,} rows from {df['ticker'].nunique()} stocks")
 
+# Columns that must never be used as predictors
+# (identifiers, targets, forward-looking values, raw price/volume)
 EXCLUDED_FEATURES = {
-    'Date','ticker','target','future_ret_5d','ret_5d_net',
-    'Open','High','Low','Close','Volume'
+    'Date', 'ticker', 'target', 'future_ret_5d', 'ret_5d_net',
+    'Open', 'High', 'Low', 'Close', 'Volume',
+    # 52-week extremes are intermediates, not independent signals
+    'high_52w', 'low_52w',
 }
 
-TEMPORARILY_EXCLUDED_FEATURES = {
-    'ret_60d',
-    'ma5','ma10','ma20','ma50',
-    'momentum_acceleration',
-    'rsi14',
-    'vol_ma20',
-    'nifty_ret_1d',
-    'nifty_ret_10d',
-    'nifty_ret_60d',
-    'nifty_rsi14',
-    'nifty_volatility_20d',
-    'nifty_price_vs_ma200',
-    'nifty_ma50_vs_ma200',
-    # --- PHASE 1 CLEANUP ---
-    'rsi_normalized', 'price_vs_ma5', 'gap', 'price_vs_ma20',
-    'ma5_vs_ma20', 'volume_trend', 'rs_ret_5d', 'volume_ratio',
-    'ret_3d', 'momentum_persistence', 'ret_1d', 'relative_volume',
-    'up_days_10', 'up_days_5'
-}
-
+# Auto-discover every numeric predictor column.
+# No manual whitelist or temporary exclusions.
 FEATURE_COLS = [
-    col for col in df.columns
-    if col not in EXCLUDED_FEATURES | TEMPORARILY_EXCLUDED_FEATURES
+    col for col in df.select_dtypes(include='number').columns
+    if col not in EXCLUDED_FEATURES
 ]
 
 print("Using features automatically detected from features.csv")
@@ -58,30 +44,6 @@ print(f"Feature names ({len(FEATURE_COLS)}):")
 for feature in FEATURE_COLS:
     print(f"  - {feature}")
 
-family_prefixes = [
-    ('nifty_', 'nifty_'),
-    ('rs_', 'rs_'),
-    ('price_', 'price_'),
-    ('ma', 'ma'),
-    ('ret_', 'ret_'),
-    ('volume', 'volume'),
-    ('volatility', 'volatility'),
-    ('cs_', 'cs_'),
-]
-
-family_counts = {}
-for family_key, prefix in family_prefixes:
-    if family_key == 'volume':
-        count = sum(1 for col in FEATURE_COLS if 'volume' in col)
-    elif family_key == 'volatility':
-        count = sum(1 for col in FEATURE_COLS if 'volatility' in col)
-    else:
-        count = sum(1 for col in FEATURE_COLS if col.startswith(prefix))
-    family_counts[family_key] = count
-
-print("Feature family counts:")
-for family_key, count in family_counts.items():
-    print(f"  - {family_key}: {count}")
 
 # ── Time-based train/test split ──────────────────────────────────────────
 # Train on: 2021-01-01 to 2024-06-30
