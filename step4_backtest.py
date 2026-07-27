@@ -225,7 +225,8 @@ def build_trade_df(signals, prices):
             continue
 
         trades.append({
-            'Date':        entry_date,
+            'Date':        future_dates.index[0],
+            'SignalDate':  entry_date,
             'Ticker':      ticker,
             'Confidence':  row['xg_proba'],
             'PredReturn':  row.get('pred_return', np.nan),
@@ -408,7 +409,7 @@ BROKERAGE            = 0.001  # 0.1% per trade (Zerodha approx)
 SLIPPAGE             = 0.002  # 0.2% slippage (realistic for mid-caps)
 TOTAL_COST           = BROKERAGE + SLIPPAGE
 
-STARTING_CAPITAL     = 100_000  # ₹1,00,000
+STARTING_CAPITAL     = 100_000  # Rs. 1,00,000
 
 print(f"\n Strategy parameters:")
 print(f"   Confidence thresholds: {', '.join([f'{t:.0%}' for t in CONFIDENCE_THRESHOLDS])}")
@@ -416,7 +417,7 @@ print(f"   Hold period          : {HOLD_DAYS} trading days")
 print(f"   Max positions        : {MAX_POSITIONS}")
 print(f"   Position size        : 10% / 12.5% / 15% by confidence bucket")
 print(f"   Transaction cost     : {TOTAL_COST*100:.2f}% per trade (both sides)")
-print(f"   Starting capital     : ₹{STARTING_CAPITAL:,.0f}")
+print(f"   Starting capital     : Rs. {STARTING_CAPITAL:,.0f}")
 
 # ── Simulate trades ───────────────────────────────────────────────────────
 # ── Threshold sweep experiment ────────────────────────────────────────────
@@ -535,7 +536,7 @@ path_analytics_summary = print_path_analytics_v2(trades_df, HOLD_DAYS)
 pred_quality_summary = print_prediction_quality_analysis(trades_df)
 
 # ── Portfolio simulation ──────────────────────────────────────────────────
-print(f"\n Portfolio Simulation (₹{STARTING_CAPITAL:,.0f} starting capital):")
+print(f"\n Portfolio Simulation (Rs. {STARTING_CAPITAL:,.0f} starting capital):")
 
 port_df, total_return, max_dd = simulate_portfolio(trades_df, prices, rank_by_pred_return=True)
 
@@ -543,8 +544,8 @@ if len(port_df) > 0:
     portfolio_val = port_df['TotalValue'].iloc[-1]
     peak = port_df['TotalValue'].max()
 
-    print(f"   Starting capital   : ₹{STARTING_CAPITAL:>10,.0f}")
-    print(f"   Final value        : ₹{portfolio_val:>10,.0f}")
+    print(f"   Starting capital   : Rs. {STARTING_CAPITAL:>10,.0f}")
+    print(f"   Final value        : Rs. {portfolio_val:>10,.0f}")
     print(f"   Total return       : {total_return:>+8.1f}%")
     print(f"   Max drawdown       : {max_dd:>+8.1f}%")
     print(f"   Test period        : {port_df['Date'].min().date()} -> {port_df['Date'].max().date()}")
@@ -608,7 +609,7 @@ exit_rule_comparison = pd.DataFrame([
     },
 ])
 exit_rule_comparison.to_csv('exit_rule_comparison.csv', index=False)
-print(f"\n Exit rule comparison saved → exit_rule_comparison.csv")
+print(f"\n Exit rule comparison saved -> exit_rule_comparison.csv")
 
 # ── Plot equity curve ─────────────────────────────────────────────────────
 if len(port_df) > 5:
@@ -618,8 +619,8 @@ if len(port_df) > 5:
     ax1.plot(port_df['Date'], port_df['Value'], color='#00C896', linewidth=2)
     ax1.axhline(y=STARTING_CAPITAL, color='gray', linestyle='--', alpha=0.5)
     ax1.set_title('Portfolio Value Over Time')
-    ax1.set_ylabel('Portfolio Value (₹)')
-    ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x,p: f'₹{x:,.0f}'))
+    ax1.set_ylabel('Portfolio Value (Rs.)')
+    ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x,p: f'Rs. {x:,.0f}'))
     ax1.grid(True, alpha=0.3)
 
     ax2.fill_between(port_df['Date'], port_df['Drawdown']*100, 0,
@@ -638,10 +639,10 @@ print(f"""
  BACKTEST COMPLETE
 {'='*65}
  Files saved:
-   backtest_trades.csv        ← all individual trades (incl. V2 path columns)
-   backtest_analytics_v2.json ← path analytics summary
-   portfolio_history.csv      ← day-by-day portfolio value
-   backtest_results.png       ← equity curve chart
+   backtest_trades.csv        <- all individual trades (incl. V2 path columns)
+   backtest_analytics_v2.json <- path analytics summary
+   portfolio_history.csv      <- day-by-day portfolio value
+   backtest_results.png       <- equity curve chart
 
  Next: Run step5_live_scanner.py (run this every morning)
 {'='*65}

@@ -32,30 +32,38 @@ DATA_DIR = ROOT / 'data'
 RESULTS_CSV = ROOT / 'walkforward_results.csv'
 REPORT_MD = ROOT / 'WALKFORWARD_REPORT.md'
 
+EXCLUDED_FEATURES = {
+    'Date','ticker','target','future_ret_5d','ret_5d_net',
+    'Open','High','Low','Close','Volume'
+}
+
+TEMPORARILY_EXCLUDED_FEATURES = {
+    'ret_60d',
+    'ma5','ma10','ma20','ma50',
+    'momentum_acceleration',
+    'rsi14',
+    'vol_ma20',
+    'nifty_ret_1d',
+    'nifty_ret_10d',
+    'nifty_ret_60d',
+    'nifty_rsi14',
+    'nifty_volatility_20d',
+    'nifty_price_vs_ma200',
+    'nifty_ma50_vs_ma200',
+    # --- PHASE 1 CLEANUP ---
+    'rsi_normalized', 'price_vs_ma5', 'gap', 'price_vs_ma20',
+    'ma5_vs_ma20', 'volume_trend', 'rs_ret_5d', 'volume_ratio',
+    'ret_3d', 'momentum_persistence', 'ret_1d', 'relative_volume',
+    'up_days_10', 'up_days_5'
+}
+
+df_cols = pd.read_csv(FEATURE_FILE, nrows=0).columns.tolist()
 FEATURE_COLS = [
-    'ret_1d', 'ret_3d', 'ret_5d', 'ret_10d', 'ret_20d',
-    'price_vs_ma5', 'price_vs_ma20', 'price_vs_ma50',
-    'ma5_vs_ma20', 'ma10_vs_ma50',
-    'rsi_normalized',
-    'volatility_5d', 'volatility_20d', 'hl_range',
-    'volume_ratio', 'volume_trend', 'relative_volume', 'updown_vol_ratio_10',
-    'bb_position',
-    'up_days_5', 'up_days_10',
-    'gap',
-    'nifty_ret_5d', 'nifty_ret_20d', 'nifty_above_ma50',
-    'rs_ret_5d', 'rs_ret_20d'
+    col for col in df_cols
+    if col not in EXCLUDED_FEATURES | TEMPORARILY_EXCLUDED_FEATURES
 ]
 
 print(f"Walkforward feature count: {len(FEATURE_COLS)}")
-
-step3_file = ROOT / 'step3_train_model.py'
-step3_text = step3_file.read_text(encoding='utf-8')
-step3_match = re.search(r"FEATURE_COLS\s*=\s*\[(.*?)\]", step3_text, re.S)
-if not step3_match:
-    raise RuntimeError('Could not locate FEATURE_COLS in step3_train_model.py')
-step3_feature_cols = re.findall(r"'([^']+)'", step3_match.group(1))
-if FEATURE_COLS != step3_feature_cols:
-    raise RuntimeError('walkforward_validation.py FEATURE_COLS differs from step3_train_model.py')
 
 CONFIDENCE_THRESHOLD = 0.75
 HOLD_DAYS = 5
@@ -66,7 +74,7 @@ TOTAL_COST = BROKERAGE + SLIPPAGE
 STARTING_CAPITAL = 100_000
 TRAIN_MONTHS = 24
 TEST_MONTHS = 3
-GAP_DAYS = 5
+GAP_DAYS = 6
 STEP_MONTHS = 3
 
 
@@ -140,7 +148,8 @@ def build_trade_df(signals, prices):
         if path_metrics is None:
             continue
         trades.append({
-            'Date':        entry_date,
+            'Date':        future_dates.index[0],
+            'SignalDate':  entry_date,
             'Ticker':      ticker,
             'Confidence':  row['xg_proba'],
             'PredReturn':  row.get('pred_return', np.nan),

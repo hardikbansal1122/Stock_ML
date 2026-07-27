@@ -41,6 +41,11 @@ TEMPORARILY_EXCLUDED_FEATURES = {
     'nifty_volatility_20d',
     'nifty_price_vs_ma200',
     'nifty_ma50_vs_ma200',
+    # --- PHASE 1 CLEANUP ---
+    'rsi_normalized', 'price_vs_ma5', 'gap', 'price_vs_ma20',
+    'ma5_vs_ma20', 'volume_trend', 'rs_ret_5d', 'volume_ratio',
+    'ret_3d', 'momentum_persistence', 'ret_1d', 'relative_volume',
+    'up_days_10', 'up_days_5'
 }
 
 FEATURE_COLS = [
@@ -83,7 +88,7 @@ for family_key, count in family_counts.items():
 # Test on : 2024-07-01 onwards  (genuinely unseen)
 SPLIT_DATE = '2024-07-01'
 
-train = df[df['Date'] < SPLIT_DATE].dropna(subset=FEATURE_COLS)
+train = df[df['Date'] < (pd.to_datetime(SPLIT_DATE) - pd.Timedelta(days=10))].dropna(subset=FEATURE_COLS)
 test  = df[df['Date'] >= SPLIT_DATE].dropna(subset=FEATURE_COLS)
 
 X_train = train[FEATURE_COLS]
@@ -225,9 +230,9 @@ print(f"""
  Lift at 60%     : {xg_prec/base_rate:.2f}x better than random
 
  Saved:
-   xgb_model.pkl           ← trained model
-   scaler.pkl              ← feature scaler
-   test_predictions.csv    ← predictions on test set
+   xgb_model.pkl           <- trained model
+   scaler.pkl              <- feature scaler
+   test_predictions.csv    <- predictions on test set
 
  Next: Run step4_backtest.py
 {'='*65}

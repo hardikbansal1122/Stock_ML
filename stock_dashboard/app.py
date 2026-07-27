@@ -38,6 +38,7 @@ IST_TZ = ZoneInfo("Asia/Kolkata")
 
 app = Flask(__name__, static_folder='static')
 
+
 BASE_DIR       = Path(__file__).parent
 ROOT_DIR       = BASE_DIR.parent
 MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
@@ -64,6 +65,8 @@ except Exception as e:
 NIFTY_TICKERS = list(dict.fromkeys([
     normalize_ticker(t) for t in get_universe_tickers(ROOT_DIR / 'universe' / 'universe.csv')
 ]))
+print(f"Loaded {len(NIFTY_TICKERS)} stocks.")
+print("First 10:", NIFTY_TICKERS[:10])
 
 # ── Feature engineering ───────────────────────────────────────────────────
 def compute_features(df):

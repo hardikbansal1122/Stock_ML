@@ -1,74 +1,38 @@
 {
   "hold_days": 5,
-<<<<<<< Updated upstream
-  "n_trades": 810,
+  "n_trades": 502,
   "milestone_hit_rate": {
-    "plus_2pct": 0.7234567901234568,
-    "plus_3pct": 0.5938271604938271,
-    "plus_5pct": 0.4074074074074074
+    "plus_2pct": 0.7868525896414342,
+    "plus_3pct": 0.6792828685258964,
+    "plus_5pct": 0.44223107569721115
   },
   "milestone_hit_count": {
-    "plus_2pct": 586,
-    "plus_3pct": 481,
-    "plus_5pct": 330
+    "plus_2pct": 395,
+    "plus_3pct": 341,
+    "plus_5pct": 222
   },
   "losers_profitable_intraday": {
-    "losing_trades_at_exit": 348,
-    "green_intraday_red_at_exit": 248,
-    "pct_of_losers": 0.7126436781609196,
-    "pct_of_all_trades": 0.30617283950617286
+    "losing_trades_at_exit": 243,
+    "green_intraday_red_at_exit": 209,
+    "pct_of_losers": 0.8600823045267489,
+    "pct_of_all_trades": 0.4163346613545817
   },
   "path_distribution": {
     "max_gain_during_hold": {
-      "mean": 0.05046189327445507,
-      "median": 0.03929417711763783
+      "mean": 0.05291883865829955,
+      "median": 0.04417300385065337
     },
     "max_drawdown_during_hold": {
-      "mean": -0.051284334230533274,
-      "median": -0.0441013695436509
+      "mean": -0.04897479375111936,
+      "median": -0.04399155992869541
     },
     "best_day_return": {
-      "mean": 0.047909146725463765,
-      "median": 0.042042058785891755
+      "mean": 0.043554372734109496,
+      "median": 0.03773223314840609
     },
     "worst_day_return": {
-      "mean": -0.03419026096738364,
-      "median": -0.03203066866466238
-=======
-  "n_trades": 278,
-  "milestone_hit_rate": {
-    "plus_2pct": 0.7230215827338129,
-    "plus_3pct": 0.6294964028776978,
-    "plus_5pct": 0.4748201438848921
-  },
-  "milestone_hit_count": {
-    "plus_2pct": 201,
-    "plus_3pct": 175,
-    "plus_5pct": 132
-  },
-  "losers_profitable_intraday": {
-    "losing_trades_at_exit": 99,
-    "green_intraday_red_at_exit": 65,
-    "pct_of_losers": 0.6565656565656566,
-    "pct_of_all_trades": 0.23381294964028776
-  },
-  "path_distribution": {
-    "max_gain_during_hold": {
-      "mean": 0.05798339599370231,
-      "median": 0.04691525164446719
-    },
-    "max_drawdown_during_hold": {
-      "mean": -0.04708692465933603,
-      "median": -0.04027714695651047
-    },
-    "best_day_return": {
-      "mean": 0.050305954697390035,
-      "median": 0.0416223775249626
-    },
-    "worst_day_return": {
-      "mean": -0.029796241947514183,
-      "median": -0.02757741501973191
->>>>>>> Stashed changes
+      "mean": -0.03438469767005103,
+      "median": -0.032528227109859274
     }
   }
 }
