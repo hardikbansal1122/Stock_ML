@@ -1,6 +1,6 @@
 import pandas as pd
 from pipeline_core import load_price_series, engine
-import linear_rank_allocator
+import linear_rank_allocator, confidence_allocator
 import inverse_volatility_allocator
 from eval_engine import PredictionAdapter, PortfolioConstructor, ModelAgnosticSimulator
 
@@ -9,6 +9,7 @@ preds_path = 'test_predictions.csv'
 df_raw = pd.read_csv(preds_path)
 df_raw['Date'] = pd.to_datetime(df_raw['Date'])
 adapted = PredictionAdapter.adapt_classifier(df_raw)
+adapted['xg_proba'] = df_raw['xg_proba']
 
 # Load price series
 prices = load_price_series()
@@ -50,13 +51,13 @@ def run_benchmark(allocator_name):
 
 if __name__ == "__main__":
     results = {}
-    for name in ["equal_weight", "linear_rank", "inverse_volatility"]:
+    for name in ["equal_weight", "linear_rank", "inverse_volatility", "confidence"]:
         print(f"Running benchmark for allocator: {name}")
         results[name] = run_benchmark(name)
     # Print markdown table
     print("\n# Allocator Comparison")
-    print("| Metric | Equal Weight | Linear Rank | Inverse Vol |")
-    print("|---|---|---|---|")
+    print("| Metric | Equal Weight | Linear Rank | Inverse Vol | Confidence |")
+    print("|---|---|---|---|---|")
     metrics = [
         'Total Return %', 'CAGR %', 'Sharpe', 'Max Drawdown %',
         'Win Rate %', 'Avg Trade Return %', 'Number of Trades'
@@ -65,8 +66,9 @@ if __name__ == "__main__":
         eq = results['equal_weight'][m]
         lr = results['linear_rank'][m]
         iv = results['inverse_volatility'][m]
+        cf = results['confidence'][m]
         # format numbers nicely
         if isinstance(eq, float):
-            print(f"| {m} | {eq:.4f} | {lr:.4f} | {iv:.4f} |")
+            print(f"| {m} | {eq:.4f} | {lr:.4f} | {iv:.4f} | {cf:.4f} |")
         else:
-            print(f"| {m} | {eq} | {lr} | {iv} |")
+            print(f"| {m} | {eq} | {lr} | {iv} | {cf} |")
