@@ -1088,18 +1088,20 @@
       ══════════════════════════════════════════ -->
       <div class="workspace active" id="ws-today">
         <div class="ws-header">
-          <div class="ws-title">Today's Signals</div>
-          <p class="ws-sub" id="ws-sub">Loading scan summary...</p>
+          <div class="ws-title">Today's Portfolio</div>
+          <p class="ws-sub" id="ws-sub">Generating portfolio using the production allocation model...</p>
         </div>
 
         <!-- Controls -->
         <div class="ctrl-bar">
           <div class="ctrl-threshold">
             <div class="ctrl-label">
-              <span>Confidence Threshold</span>
-              <span id="thr-val">60%</span>
+              <span>Portfolio Generation</span>
+              <span>Automatic</span>
             </div>
-            <input type="range" min="50" max="85" value="60" class="slider" id="slider">
+
+            <input type="range" value="100" class="slider" id="slider" disabled
+              style="opacity:.35;pointer-events:none;">
           </div>
           <div class="ctrl-actions">
             <button class="btn btn-outline" onclick="checkResolved()">↻ Resolve Exits</button>
@@ -1120,7 +1122,7 @@
             <div class="stat-det" id="universe-detail">Loading universe size...</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Signals Today</div>
+            <div class="stat-label">Portfolio Holdings</div>
             <div class="stat-val accent" id="sig-count">—</div>
             <div class="stat-det" id="sig-detail">Run scan to see</div>
           </div>
@@ -1139,13 +1141,13 @@
         <!-- Signals section -->
         <div class="section">
           <div class="sec-head">
-            <div class="sec-title">Picks</div>
-            <div class="sec-meta" id="tbl-meta">Awaiting scan</div>
+            <div class="sec-title">Portfolio</div>
+            <div class="sec-meta" id="tbl-meta">Awaiting Portfolio Generation</div>
           </div>
           <div id="signals-box">
             <div class="empty">
-              <div class="empty-t">Loading last scan...</div>
-              <div class="empty-s">Fetching previous results from disk</div>
+              <div class="empty-t">No portfolio generated yet.</div>
+              <div class="empty-s">Run today's portfolio generation to view recommended positions.</div>
             </div>
           </div>
         </div>
@@ -1521,16 +1523,19 @@
       if (signals.length === 0) {
         document.getElementById('signals-box').innerHTML = `
         <div class="empty">
-          <div class="empty-t">Market is quiet today</div>
-          <div class="empty-s">No stocks crossed your confidence threshold. Try lowering the slider or wait for tomorrow.</div>
+          <div class="empty-t">No portfolio generated</div>
+          <div class="empty-s">
+            The portfolio generator did not return any positions.
+          </div>
         </div>`;
         return;
       }
 
       let html = `<table class="tbl"><thead><tr>
-        <th style="width:44px">#</th><th>Ticker</th><th>Confidence</th>
+        <th style="width:44px">#</th><th>Ticker</th><th>Confidence</th><th>Alloc%</th>
         <th>Price</th><th>RSI</th><th>Volume</th><th>5d Mom.</th>
       </tr></thead><tbody>`;
+      signals.sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
 
       signals.forEach((s, i) => {
         const cp = (s.confidence * 100).toFixed(1);
@@ -1539,13 +1544,24 @@
         const ms = s.momentum_5d >= 0 ? '+' : '';
         const vs = s.volume_ratio > 1.5 ? 'spike' : '';
         html += `<tr>
-          <td><span class="rank">${i + 1}</span></td>
+          <td><span class="rank">${s.rank ?? (i + 1)}</span></td>
           <td><span class="ticker-sym">${s.ticker}</span></td>
           <td><div class="conf-bar">
-            <div class="conf-track"><div class="conf-fill" style="width:${cp}%;background:${cc}"></div></div>
-            <span class="conf-val ${getConfClass(s.confidence)}">${cp}%</span>
-          </div></td>
-          <td class="price">₹${s.close.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+    <div class="conf-track">
+        <div class="conf-fill"
+             style="width:${cp}%;background:${cc}">
+        </div>
+    </div>
+    <span class="conf-val ${getConfClass(s.confidence)}">${cp}%</span>
+</div></td>
+
+<td class="price">
+    ${((s.weight ?? 0) * 100).toFixed(1)}%
+</td>
+
+<td class="price">
+    ₹${s.close.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+</td>
           <td><span class="rsi-b ${getRsiClass(s.rsi)}">${s.rsi.toFixed(0)} · ${getRsiLabel(s.rsi)}</span></td>
           <td class="vol ${vs}">${s.volume_ratio.toFixed(1)}x ${s.volume_ratio > 1.5 ? '🔥' : ''}</td>
           <td class="mom ${mc}">${ms}${s.momentum_5d.toFixed(1)}%</td>
@@ -1892,7 +1908,7 @@
       const btn = document.getElementById('scan-btn');
 
       btn.disabled = true;
-      btn.innerHTML = '◷ Scanning...';
+      btn.innerHTML = '◷ Generating Portfolio';
 
       switchWs('today');
 
@@ -1916,7 +1932,7 @@
           const btn = document.getElementById('scan-btn');
 
           btn.disabled = true;
-          btn.innerHTML = '◷ Scanning...';
+          btn.innerHTML = '◷ Generating Portfolio';
 
           switchWs('today');
 

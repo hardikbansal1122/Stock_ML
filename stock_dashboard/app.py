@@ -46,10 +46,12 @@ SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
 MAX_DOWNLOAD_WORKERS = 8
 BATCH_SIZE = 25
-DEV_BYPASS_SCAN_LIMIT = True
+DEV_BYPASS_SCAN_LIMIT = False
 
 sys.path.insert(0, str(ROOT_DIR))
 from universe import get_universe_tickers, normalize_ticker
+from confidence_allocator import ConfidenceAllocator
+from pipeline_config import MAX_POSITIONS as PORTFOLIO_TOP_K
 
 
 # ── Load model ────────────────────────────────────────────────────────────
@@ -438,22 +440,37 @@ def api_scan():
                 .eq('status', 'OPEN')
                 .execute())
             if not dup.data:
-                supabase.table('trades').insert({
-                    'uid': uid,
-                    'ticker': ticker,
-                    'confidence': sig.get('confidence'),
-                    'entry_price': sig.get('close'),
-                    'entry_date': datetime.now(timezone.utc).isoformat(),
-                    'status': 'OPEN'
-                }).execute()
+                try:
+                    supabase.table('trades').insert({
+                        'uid': uid,
+                        'ticker': ticker,
+                        'confidence': sig.get('confidence'),
+                        'entry_price': sig.get('close'),
+                        'entry_date': datetime.now(timezone.utc).isoformat(),
+                        'status': 'OPEN',
+                        'weight': sig.get('weight'),
+                        'rank': sig.get('rank'),
+                    }).execute()
+                except Exception as e:
+                    print('TRADE INSERT ERROR:', e)
+                    return jsonify({'error': 'Database insert failed for trade'}), 500
             # Store scan result with uid and scan_time
-            supabase.table('scan_results').insert({
+            # Debug: payload for scan_results insertion
+            payload = {
                 'uid': uid,
                 'ticker': ticker,
                 'confidence': sig.get('confidence'),
                 'price': sig.get('close'),
-                'scan_time': scan_time
-            }).execute()
+                'scan_time': scan_time,
+                'weight': sig.get('weight'),
+                'rank': sig.get('rank'),
+            }
+            print('INSERTING SCAN_RESULT:', payload)
+            try:
+                supabase.table('scan_results').insert(payload).execute()
+            except Exception as e:
+                print('SCAN_RESULTS INSERT ERROR:', e)
+                return jsonify({'error': 'Database insert failed for scan results'}), 500
         # Mark that this user has scanned today
         supabase.table('user_scans').insert({
             'uid': uid,
@@ -497,18 +514,21 @@ def api_last_scan():
         .eq('uid', uid)\
         .gte('scan_time', start_time)\
         .lte('scan_time', end_time)\
-        .order('id', desc=True)\
+        .order('confidence', desc=True)\
         .execute()
-        
+
     signals = []
-    for row in response.data or []:
+    for i, row in enumerate(response.data or []):
         signals.append({
-            'ticker': row['ticker'],
-            'confidence': float(row['confidence']),
-            'close': float(row['price']),
-            'rsi': 50,
-            'volume_ratio': 1.0,
-            'momentum_5d': 0
+            'rank':          row.get('rank') or (i + 1),
+            'ticker':        row['ticker'],
+            'confidence':    float(row['confidence']),
+            'weight':        float(row['weight']) if row.get('weight') is not None else None,
+            'close':         float(row['price']),
+            'rsi':           50,
+            'volume_ratio':  1.0,
+            'momentum_5d':   0,
+            'price_vs_ma20': 0,
         })
     
     dt_ist = dt_st.astimezone(IST_TZ)
@@ -527,15 +547,21 @@ def load_last_scan():
     return None
 
 # ── Scanner ───────────────────────────────────────────────────────────────
-def run_scanner(threshold=0.60):
+def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; ignored by pipeline
+    """Production portfolio pipeline:
+    Features → Batch XGBoost predict → Top-K selection → ConfidenceAllocator → ranked portfolio.
+    The ConfidenceAllocator (confidence_allocator.py) is the single source of allocation logic.
+    """
     perf = _get_perf()
     if MODEL is None:
         return {"error": "Model not loaded. Run step3_train_model.py first."}
-    signals, processed, failed = [], 0, 0
     model = MODEL
     feature_cols = FEATURE_COLS
     ticker_stats_append = perf['ticker_stats'].append
+    candidates = []   # [{ticker, feat, close, rsi, volume_ratio, momentum_5d, price_vs_ma20}]
+    processed, failed = 0, 0
 
+    # ── Phase 1: Download + Feature Engineering (unchanged) ─────────────────
     for batch_start in range(0, len(NIFTY_TICKERS), BATCH_SIZE):
         batch_tickers = NIFTY_TICKERS[batch_start:batch_start + BATCH_SIZE]
         download_results, batch_download_time = fetch_stock_batch(batch_tickers)
@@ -544,40 +570,42 @@ def run_scanner(threshold=0.60):
         for ticker, df, ticker_download in download_results:
             ticker_start = perf_counter()
             ticker_features = 0.0
-            ticker_prediction = 0.0
             try:
                 perf['download_total'] = perf.get('download_total', 0.0) + ticker_download
-                if df is None: failed += 1; continue
+                if df is None:
+                    failed += 1
+                    continue
                 feature_start = perf_counter()
-                df   = compute_features(df)
+                df = compute_features(df)
                 feature_end = perf_counter()
                 ticker_features = feature_end - feature_start
                 perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
                 last_row = df.iloc[-1]
-                feat = last_row[feature_cols].to_numpy().reshape(1, -1)
-                if np.isnan(feat).any(): continue
-                prediction_start = perf_counter()
-                conf = float(model.predict_proba(feat)[0][1])
-                prediction_end = perf_counter()
-                ticker_prediction = prediction_end - prediction_start
-                perf['prediction_total'] = perf.get('prediction_total', 0.0) + ticker_prediction
+                feat = last_row[feature_cols].to_numpy()
+                if np.isnan(feat).any():
+                    continue
                 processed += 1
-                if conf >= threshold:
-                    signals.append({'ticker':ticker,'confidence':conf,
-                        'close':float(last_row['Close']),'rsi':float(last_row['rsi14']),
-                        'volume_ratio':float(last_row['volume_ratio']),
-                        'momentum_5d':float(last_row['ret_5d']*100),
-                        'price_vs_ma20':float(last_row['price_vs_ma20']*100)})
-            except: failed += 1
+                candidates.append({
+                    'ticker':       ticker,
+                    'feat':         feat,
+                    'close':        float(last_row['Close']),
+                    'rsi':          float(last_row['rsi14']),
+                    'volume_ratio': float(last_row['volume_ratio']),
+                    'momentum_5d':  float(last_row['ret_5d'] * 100),
+                    'price_vs_ma20': float(last_row['price_vs_ma20'] * 100),
+                })
+            except:
+                failed += 1
             finally:
                 ticker_end = perf_counter()
                 ticker_stats_append({
-                    'ticker': ticker,
-                    'download': ticker_download,
-                    'features': ticker_features,
-                    'prediction': ticker_prediction,
-                    'total': (ticker_end - ticker_start) + ticker_download,
+                    'ticker':     ticker,
+                    'download':   ticker_download,
+                    'features':   ticker_features,
+                    'prediction': 0.0,  # batch prediction is done after the loop
+                    'total':      (ticker_end - ticker_start) + ticker_download,
                 })
+
     print("\nDownload Profile Summary")
     print(f"Batches processed ..... {perf.get('download_batch_count', 0)}")
     print(f"Batch size ............ {BATCH_SIZE}")
@@ -585,12 +613,64 @@ def run_scanner(threshold=0.60):
     print(f".BO retries ........... {perf.get('download_bo_retry_count_total', 0)}")
     print(f".BO retry time ........ {_fmt_seconds(perf.get('download_bo_retry_time_total', 0.0))}")
     print(f"Batch time total ...... {_fmt_seconds(perf.get('download_batch_time_total', 0.0))}")
-    signals.sort(key=lambda x: x['confidence'], reverse=True)
-    return {'signals':signals,'processed':processed,'failed':failed,
-            'total':len(NIFTY_TICKERS),
-            'timestamp':datetime.now().strftime("%d %b %Y, %I:%M %p"),
-            'date':datetime.now().strftime("%d %b %Y"),
-            'time':datetime.now().strftime("%I:%M %p")}
+
+    if not candidates:
+        return {'signals': [], 'processed': processed, 'failed': failed,
+                'total': len(NIFTY_TICKERS),
+                'timestamp': datetime.now().strftime("%d %b %Y, %I:%M %p"),
+                'date': datetime.now().strftime("%d %b %Y"),
+                'time': datetime.now().strftime("%I:%M %p")}
+
+    # ── Phase 2: Batch XGBoost Prediction ───────────────────────────────────
+    prediction_start = perf_counter()
+    X = np.vstack([c['feat'] for c in candidates])
+    probas = model.predict_proba(X)[:, 1]
+    prediction_end = perf_counter()
+    perf['prediction_total'] = prediction_end - prediction_start
+    print(f"Batch prediction: {len(candidates)} stocks in {_fmt_seconds(perf['prediction_total'])}")
+
+    for c, prob in zip(candidates, probas):
+        c['xg_proba'] = float(prob)
+
+    # ── Phase 3: Top-K Selection ─────────────────────────────────────────────
+    candidates.sort(key=lambda x: x['xg_proba'], reverse=True)
+    top_k = candidates[:PORTFOLIO_TOP_K]
+    for rank, c in enumerate(top_k, 1):
+        c['rank'] = rank
+
+    # ── Phase 4: Confidence Allocator (single source of truth) ──────────────
+    ranked_df = pd.DataFrame([
+        {'Ticker': c['ticker'], 'xg_proba': c['xg_proba'], 'Rank': c['rank']}
+        for c in top_k
+    ])
+    allocator = ConfidenceAllocator()
+    weights = allocator.allocate(ranked_df)  # {ticker: weight}
+    print(f"Allocation: {len(weights)} positions, weights sum = {sum(weights.values()):.6f}")
+
+    # ── Phase 5: Build portfolio output ─────────────────────────────────────
+    signals = []
+    for c in top_k:
+        signals.append({
+            'rank':          c['rank'],
+            'ticker':        c['ticker'],
+            'confidence':    c['xg_proba'],
+            'weight':        weights.get(c['ticker'], 0.0),
+            'close':         c['close'],
+            'rsi':           c['rsi'],
+            'volume_ratio':  c['volume_ratio'],
+            'momentum_5d':   c['momentum_5d'],
+            'price_vs_ma20': c['price_vs_ma20'],
+        })
+
+    return {
+        'signals':   signals,
+        'processed': processed,
+        'failed':    failed,
+        'total':     len(NIFTY_TICKERS),
+        'timestamp': datetime.now().strftime("%d %b %Y, %I:%M %p"),
+        'date':      datetime.now().strftime("%d %b %Y"),
+        'time':      datetime.now().strftime("%I:%M %p"),
+    }
 
 def get_trading_date():
 
