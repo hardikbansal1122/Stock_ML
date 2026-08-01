@@ -8,20 +8,9 @@ Run: python app.py
 Open: http://localhost:5000
 """
 
-from postgrest import base_request_builder
-from pandas.core import resample
-from pandas.core import resample
-from pandas.core import resample
-from pandas.core import resample
-from pandas.core import resample
-from pandas.core import resample
-from pandas.core import resample
-from pandas.core import resample
-from concurrent.futures import ThreadPoolExecutor
-from flask import debughelpers
 from flask import Flask, jsonify, send_from_directory, request, g
 
-from auth_middleware import require_auth, require_admin, supabase, ADMIN_EMAILS
+from .auth_middleware import require_auth, require_admin, supabase, ADMIN_EMAILS
 import yfinance as yf
 import pandas as pd
 import numpy as np
