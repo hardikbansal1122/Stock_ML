@@ -172,6 +172,7 @@ def fetch_stock_batch(tickers):
     batch_start = perf_counter()
 
     try:
+        print(f"Downloading batch of {len(batch_symbols)} symbols")
         batch_df = yf.download(
             batch_symbols,
             period="6mo",
@@ -180,6 +181,7 @@ def fetch_stock_batch(tickers):
             group_by="ticker",
             timeout=20,
         )
+        print("Batch download finished")
 
     except Exception as e:
 
@@ -562,6 +564,7 @@ def load_last_scan():
 # ── Scanner ───────────────────────────────────────────────────────────────
 def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; ignored by pipeline
     log_memory("Scanner start")
+    print(f"DEBUG BATCH SIZE = {BATCH_SIZE}")
     """Production portfolio pipeline:
     Features → Batch XGBoost predict → Top-K selection → ConfidenceAllocator → ranked portfolio.
     The ConfidenceAllocator (confidence_allocator.py) is the single source of allocation logic.
@@ -682,6 +685,7 @@ def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; 
             'momentum_5d':   c['momentum_5d'],
             'price_vs_ma20': c['price_vs_ma20'],
         })
+        log_memory("Scanner end")
 
     return {
         'signals':   signals,
