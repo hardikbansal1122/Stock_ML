@@ -34,7 +34,7 @@ MODEL_PATH     = BASE_DIR / 'xgb_model.pkl'
 SCALER_PATH    = BASE_DIR / 'scaler.pkl'
 FEAT_PATH      = BASE_DIR / 'feature_list.csv'
 MAX_DOWNLOAD_WORKERS = 8
-BATCH_SIZE = 25
+BATCH_SIZE = 5
 DEV_BYPASS_SCAN_LIMIT = False
 
 sys.path.insert(0, str(ROOT_DIR))
