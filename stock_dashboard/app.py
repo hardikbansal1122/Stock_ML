@@ -22,6 +22,13 @@ from datetime import datetime, timedelta, timezone, time
 from zoneinfo import ZoneInfo
 import warnings
 warnings.filterwarnings('ignore')
+import os
+import psutil
+
+def log_memory(stage):
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info().rss / (1024 * 1024)
+    print(f"[MEMORY] {stage}: {mem:.1f} MB")
 
 IST_TZ = ZoneInfo("Asia/Kolkata")
 
@@ -554,6 +561,7 @@ def load_last_scan():
 
 # ── Scanner ───────────────────────────────────────────────────────────────
 def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; ignored by pipeline
+    log_memory("Scanner start")
     """Production portfolio pipeline:
     Features → Batch XGBoost predict → Top-K selection → ConfidenceAllocator → ranked portfolio.
     The ConfidenceAllocator (confidence_allocator.py) is the single source of allocation logic.
@@ -587,6 +595,7 @@ def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; 
                 ticker_features = feature_end - feature_start
                 perf['feature_total'] = perf.get('feature_total', 0.0) + ticker_features
                 last_row = df.iloc[-1]
+                del df
                 feat = last_row[feature_cols].to_numpy()
                 if np.isnan(feat).any():
                     continue
@@ -611,6 +620,7 @@ def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; 
                     'prediction': 0.0,  # batch prediction is done after the loop
                     'total':      (ticker_end - ticker_start) + ticker_download,
                 })
+        log_memory(f"After batch {batch_start // BATCH_SIZE + 1}")
 
     print("\nDownload Profile Summary")
     print(f"Batches processed ..... {perf.get('download_batch_count', 0)}")
@@ -628,9 +638,13 @@ def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; 
                 'time': datetime.now().strftime("%I:%M %p")}
 
     # ── Phase 2: Batch XGBoost Prediction ───────────────────────────────────
+    log_memory("Before np.vstack")
+
     prediction_start = perf_counter()
     X = np.vstack([c['feat'] for c in candidates])
+    log_memory("After np.vstack")
     probas = model.predict_proba(X)[:, 1]
+    log_memory("After predict_proba")
     prediction_end = perf_counter()
     perf['prediction_total'] = prediction_end - prediction_start
     print(f"Batch prediction: {len(candidates)} stocks in {_fmt_seconds(perf['prediction_total'])}")
@@ -651,6 +665,7 @@ def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; 
     ])
     allocator = ConfidenceAllocator()
     weights = allocator.allocate(ranked_df)  # {ticker: weight}
+    log_memory("After allocation")
     print(f"Allocation: {len(weights)} positions, weights sum = {sum(weights.values()):.6f}")
 
     # ── Phase 5: Build portfolio output ─────────────────────────────────────
