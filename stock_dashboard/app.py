@@ -563,6 +563,9 @@ def load_last_scan():
 
 # ── Scanner ───────────────────────────────────────────────────────────────
 def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; ignored by pipeline
+    print("=" * 60)
+    print("RUN_SCANNER ENTERED")
+    print("=" * 60)
     log_memory("Scanner start")
     print(f"DEBUG BATCH SIZE = {BATCH_SIZE}")
     """Production portfolio pipeline:
