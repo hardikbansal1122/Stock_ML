@@ -161,7 +161,9 @@ def fetch_stock_batch(tickers):
 
     perf = _get_perf()
     batch_symbols = [f"{ticker}.NS" for ticker in tickers]
+
     batch_start = perf_counter()
+
     try:
         batch_df = yf.download(
             batch_symbols,
@@ -169,9 +171,24 @@ def fetch_stock_batch(tickers):
             progress=False,
             auto_adjust=True,
             group_by="ticker",
+            timeout=20,
         )
-    except:
+
+    except Exception as e:
+
+        print("=" * 80)
+        print("BATCH DOWNLOAD FAILED")
+        print(type(e).__name__)
+        print(str(e))
+        print("=" * 80)
+
+        # If Yahoo rate limited us, don't immediately generate
+        # 25 more fallback requests.
+        if "Rate limited" in str(e):
+            return [], 0.0
+
         batch_df = None
+
     ns_download_time = perf_counter() - batch_start
 
     results = []
