@@ -112,6 +112,10 @@ def compute_features(df):
 def fetch_stock(ticker):
     for suffix in ['.NS','.BO']:
         try:
+            symbol = f"{ticker}{suffix}"
+            print("=" * 60)
+            print(f"START yf.download ({symbol if 'symbol' in locals() else 'batch'})")
+            log_memory("Before yf.download")
             df = yf.download(f"{ticker}{suffix}", period="6mo",
                              progress=False, auto_adjust=True)
             if isinstance(df.columns, pd.MultiIndex):
@@ -124,6 +128,9 @@ def fetch_stock(ticker):
 
 def _download_stock_frame(symbol):
     try:
+        print("=" * 60)
+        print(f"START yf.download ({symbol if 'symbol' in locals() else 'batch'})")
+        log_memory("Before yf.download")
         df = yf.download(symbol, period="6mo", progress=False, auto_adjust=True)
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
@@ -172,7 +179,10 @@ def fetch_stock_batch(tickers):
     batch_start = perf_counter()
 
     try:
-        print(f"Downloading batch of {len(batch_symbols)} symbols")
+        print("=" * 60)
+        print(f"START yf.download ({'batch'})")
+        log_memory("Before yf.download")
+
         batch_df = yf.download(
             batch_symbols,
             period="6mo",
@@ -181,6 +191,8 @@ def fetch_stock_batch(tickers):
             group_by="ticker",
             timeout=20,
         )
+
+        log_memory("After batch yf.download")
         print("Batch download finished")
 
     except Exception as e:
@@ -194,6 +206,11 @@ def fetch_stock_batch(tickers):
         # If Yahoo rate limited us, don't immediately generate
         # 25 more fallback requests.
         if "Rate limited" in str(e):
+            del batch_df
+            import gc
+            gc.collect()
+
+            log_memory("After deleting batch_df")
             return [], 0.0
 
         batch_df = None
@@ -253,6 +270,10 @@ def fetch_stock_with_timing(ticker):
 def get_current_price(ticker):
     for suffix in ['.NS','.BO']:
         try:
+            symbol = f"{ticker}{suffix}"
+            print("=" * 60)
+            print(f"START yf.download ({symbol if 'symbol' in locals() else 'batch'})")
+            log_memory("Before yf.download")
             df = yf.download(f"{ticker}{suffix}", period="5d",
                              progress=False, auto_adjust=True)
             if isinstance(df.columns, pd.MultiIndex):
@@ -566,6 +587,7 @@ def run_scanner(threshold=0.60):  # threshold param kept for API compatibility; 
     print("=" * 60)
     print("RUN_SCANNER ENTERED")
     print("=" * 60)
+
     log_memory("Scanner start")
     print(f"DEBUG BATCH SIZE = {BATCH_SIZE}")
     """Production portfolio pipeline:
